@@ -104,7 +104,7 @@ export const networks = [
 export const WalletAssets = [
   {
     chainId: '0x38',
-    balance: '0',
+    balance: 0,
     tokens: [],
     nfts: [],
     slug: 'bsc',
@@ -124,7 +124,7 @@ export const WalletAssets = [
   },
   {
     chainId: '0x1',
-    balance: '0',
+    balance: 0,
     tokens: [],
     nfts: [],
     slug: 'eth',
@@ -144,7 +144,7 @@ export const WalletAssets = [
   },
   {
     chainId: '0x89',
-      balance: '0',
+      balance: 0,
       tokens: [],
       nfts: [],
       slug: 'polygon',
@@ -164,7 +164,7 @@ export const WalletAssets = [
   }, 
   {
     chainId: '0xa4b1',
-    balance: '0',
+    balance: 0,
     tokens: [],
     nfts: [],
     slug: 'arbitrum',
@@ -184,7 +184,7 @@ export const WalletAssets = [
   },
   {
     chainId: '0xa4b1',
-    balance: '0',
+    balance: 0,
     tokens: [],
     nfts: [],
     slug: 'zksync',
@@ -204,7 +204,7 @@ export const WalletAssets = [
   },
   {
     chainId: '0x2105',
-    balance: '0',
+    balance: 0,
     tokens: [],
     nfts: [],
     slug: 'base',
@@ -224,7 +224,7 @@ export const WalletAssets = [
   },
   {
     chainId: '0xa',
-    balance: '0',
+    balance: 0,
     tokens: [],
     nfts: [],
     slug: 'optimism',

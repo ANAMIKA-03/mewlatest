@@ -8,9 +8,9 @@ import { useNavigation } from '@react-navigation/native';
 import { Dimensions } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import styles from './styles';
-import { setActiveNetwork, setActiveWallet, setAddress, setInitialised, setMnemonic, setPincode, setPrivateKey } from '../../redux/walletSlice';
+import { createWallet, setActiveNetwork, setActiveWallet, setAddress, setInitialised, setMnemonic, setPincode, setPrivateKey } from '../../redux/walletSlice';
 import { all_chains_txns, AllChainIds, WalletAssets } from '../../utils/walletConstants';
-
+import { getHDWallet, setDefaultAccount, setProvider } from '../../utils/web3/web3';
 
 const WalletTabScreen = () => {
   const { networks, activeNetwork } = useSelector(state => state.wallet)
@@ -38,27 +38,17 @@ const WalletTabScreen = () => {
   const bottomSheetReff = React.useRef();
   const [isVisible, setIsVisible] = useState(false);
   const secondBottomSheetRef = useRef();
-  const [recoveryPhrase, setRecoveryPhrase] = useState(Array(12).fill('')); // Array of 12 inputs
-  const bottomSheetR = useRef(); // Reference to the RBSheet
+  const [recoveryPhrase, setRecoveryPhrase] = useState(Array(12).fill(''));
+  const bottomSheetR = useRef();
 
-  // Open the bottom sheet
   const openBottomSheetone = () => {
     if (bottomSheetR.current) {
       bottomSheetR.current.open();
     }
   };
 
-  const bottomSheetRe = useRef(); // Reference to the RBSheet
+  const bottomSheetRe = useRef();
 
-  const openSecondBottomSheet = () => {
-    bottomSheetRef.current.close();
-    secondBottomSheetRef.current.open();
-  };
-
-  const closeSecondBottomSheet = () => {
-    secondBottomSheetRef.current.close();
-  };
-  
 
   const openBottomSheett = () => {
     bottomSheetReff.current.open();
@@ -68,25 +58,16 @@ const WalletTabScreen = () => {
     bottomSheetReff.current.close();
   };
 
-
-  const openScannerModal = () => {
-    setScannerModalVisible(true);
-  };
-
-  const closeScannerModal = () => {
-    setScannerModalVisible(false);
-  };
-
- 
-
-  // Open the bottom sheet
   const openBottomSheetchk = () => {
     if (bottomSheetRe.current) {
       bottomSheetRe.current.open();
     }
   };
 
-  // Handle input change for recovery phrase words
+  const closeBottomSheetchk = () => {
+    bottomSheetRe.current.close();
+  };
+
   const handleInputChange = (index, value) => {
     const updatedPhrase = [...recoveryPhrase];
     updatedPhrase[index] = value;
@@ -101,47 +82,13 @@ const WalletTabScreen = () => {
   ];
 
   const createPassword = async (data) => {
-    console.log("111111")
     try {
-      await setLoading(true);
-      console.log("abbb")
-      console.log('Generating random bytes...');
-      const randomBytes = crypto.randomBytes(16);
-      const mnemonic = bip39.entropyToMnemonic(randomBytes.toString("hex"));
-      console.log("mnemonic", mnemonic)
-
-      const mnemonicArray = mnemonic.split(" ");
-      console.log("menArray", mnemonicArray)
-      setMnemonicWords(mnemonic);
-      { console.log("Array", mnemonicWords); }
-      console.log("mnemonicWordsArray", mnemonicWordsArray)
-
-      setMnemonicWordsArray(mnemonicArray);
-      console.log("mnemonicWordsArray", mnemonicWordsArray)
-      console.log("mne")
-
-      const hasDuplicates = _.uniq(mnemonicArray).length !== mnemonicArray.length;
-      if (hasDuplicates) {
-        createPassword();
-        return;
-      }
-      console.log("122222")
-
-      const shuffled = _.shuffle(mnemonicArray);
-      setMnemonicShuffled(shuffled);
-      console.log("mnemonicShuffled", mnemonicShuffled)
+      setLoading(true);
       const HDWallet = getHDWallet(0, mnemonic);
-      console.log("HDWallet:", HDWallet);
-      if (HDWallet) {
-        console.log("Wallet Address:", HDWallet.address);
-        console.log("Wallet Private Key:", HDWallet.privateKey);
-        dispatch(setAddress(HDWallet.address));
-        dispatch(setPrivateKey(HDWallet.privateKey));
-      } else {
-        console.log("Failed to generate HDWallet");
-      }
+      let mnemonic = HDWallet?.seedPhrase;
+      // console.log("HDWallet:", HDWallet);      
       dispatch(setAddress(HDWallet?.address));
-      let web3 = setDefaultAccount(HDWallet?.privateKey);
+      setDefaultAccount(HDWallet?.privateKey);
       dispatch(setPrivateKey(HDWallet?.privateKey));
       dispatch(setMnemonic(mnemonic));
       dispatch(
@@ -149,7 +96,7 @@ const WalletTabScreen = () => {
           index: 0,
           address: HDWallet?.address,
           privateKey: HDWallet?.privateKey,
-          name: 'Wallet1',
+          name: 'Wallet-1',
           networks: AllChainIds,
           assets: WalletAssets,
           seed: mnemonic,
@@ -165,7 +112,6 @@ const WalletTabScreen = () => {
       return false;
     }
   };
-
 
   const startProgressSteps = () => {
     progressSheetRef.current.open();
@@ -327,9 +273,10 @@ const WalletTabScreen = () => {
 
   const selectNetwork = (networkindex) => {
     dispatch(setActiveNetwork(networkindex));
+    setProvider(networks[networkindex]?.rpcUrl); // changing rpc in app
     setDropdownVisible(false);
   };
-
+    
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -366,7 +313,7 @@ const WalletTabScreen = () => {
         <TouchableOpacity style={styles.iconCircle}
           onPress={openBottomSheetone}
         >
-            <MaterialCommunityIcons name="gas-station-outline" size={20} color={'#000'} />
+          <MaterialCommunityIcons name="gas-station-outline" size={20} color={'#000'} />
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.iconCircle}
@@ -394,7 +341,7 @@ const WalletTabScreen = () => {
 
         <TouchableOpacity
           style={styles.importWalletButton}
-          onPress={openBottomSheetchk}
+          onPress={openBottomSheett}
         >
           <MaterialCommunityIcons name="wallet" size={18} color="#000" style={{ marginRight: 10 }} />
           <Text style={styles.importWalletText}>IMPORT EXISTING WALLET</Text>
@@ -454,15 +401,15 @@ const WalletTabScreen = () => {
         }}
       >
         <ScrollView showsVerticalScrollIndicator={false}>
-          <TouchableOpacity onPress={() => bottomSheetRef.current.close()} style={styles.safetyClose}>
+          <TouchableOpacity onPress={closeBottomSheet} style={styles.safetyClose}>
             <Text style={styles.safetyCloseText}>×</Text>
           </TouchableOpacity>
 
-          {/* <Image
-            source={require('../../../assets/robot.png')}
+          <Image
+            source={require('../../../assets/home/robot.png')}
             style={styles.safetyImage}
             resizeMode="contain"
-          /> */}
+          />
 
           <Text style={styles.safetyTitle}>Crypto safety 101</Text>
           <Text style={styles.safetySubheading}>
@@ -504,8 +451,6 @@ const WalletTabScreen = () => {
           </TouchableOpacity>
         </ScrollView>
       </RBSheet>
-
-
 
       <RBSheet
         ref={pinSheetRef}
@@ -716,7 +661,7 @@ const WalletTabScreen = () => {
         }}
       >
         <View style={styles.closeButtonContainer}>
-          <TouchableOpacity onPress={closeBottomSheet} style={styles.closeButton}>
+          <TouchableOpacity onPress={closeBottomSheett} style={styles.closeButton}>
             <MaterialCommunityIcons name="close" size={24} color="#000" />
           </TouchableOpacity>
         </View>
@@ -726,7 +671,12 @@ const WalletTabScreen = () => {
         <TouchableOpacity style={styles.optionContainer}>
           <MaterialCommunityIcons name="file-document" size={24} color="#000" style={styles.optionIcon} />
           <View style={styles.textContainer}>
-            <Text style={styles.optionText}>Restore with recovery phrase</Text>
+
+
+            <TouchableOpacity onPress={openBottomSheetchk} style={styles.optionText}>
+              <Text style={styles.text}>Restore with recovery phrase</Text>
+            </TouchableOpacity>
+
             <Text style={styles.optionDescription}>
               Restore full access to your existing wallet using a secret recovery phrase.
             </Text>
@@ -746,7 +696,6 @@ const WalletTabScreen = () => {
         </TouchableOpacity>
       </RBSheet>
 
-
       <RBSheet
         ref={bottomSheetRe}
         closeOnDragDown={true}
@@ -760,70 +709,39 @@ const WalletTabScreen = () => {
           },
         }}
       >
-    <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.closeButtonContainer}>
-          <TouchableOpacity onPress={() => bottomSheetRef.current.close()} style={styles.closeButton}>
-            <MaterialCommunityIcons name="close" size={24} color="#000" />
-          </TouchableOpacity>
-        </View>
+        <ScrollView contentContainerStyle={styles.container}>
+          <View style={styles.closeButtonContainer}>
+            <TouchableOpacity onPress={closeBottomSheetchk} style={styles.closeButton}>
+              <MaterialCommunityIcons name="close" size={24} color="#000" />
+            </TouchableOpacity>
+          </View>
 
-        <Text style={styles.title}>Enter your recovery phrase</Text>
-        
+          <Text style={styles.title}>Enter your recovery phrase</Text>
 
-        {/* Recovery Phrase Input */}
-        <View style={styles.inputContainer}>
-          {Array.from({ length: 12 }).map((_, index) => (
-            <View style={styles.inputBox} key={index}>
-              <TextInput
-                style={styles.inputField}
-                value={recoveryPhrase[index]}
-                onChangeText={(text) => handleInputChange(index, text)}
-                placeholder={`Word ${index + 1}`}
-                placeholderTextColor="#aaa"
-                maxLength={12}
-              />
-            </View>
-          ))}
-        </View>
+          <View style={styles.inputContainer}>
+            {Array.from({ length: 12 }).map((_, index) => (
+              <View style={styles.inputBox} key={index}>
+                <TextInput
+                  style={styles.inputField}
+                  value={recoveryPhrase[index]}
+                  onChangeText={(text) => handleInputChange(index, text)}
+                  placeholder={`Word ${index + 1}`}
+                  placeholderTextColor="#aaa"
+                  maxLength={12}
+                />
+              </View>
+            ))}
+          </View>
 
-        {/* <Text style={styles.description}>
+          {/* <Text style={styles.description}>
           If your recovery phrase is shorter than 24 words (i.e., 12, 15, 18, or 21 words), you can still use it to restore your wallet. Just enter as many words as you have in your phrase.
         </Text> */}
 
-        <TouchableOpacity style={styles.continueButton}>
-          <Text style={styles.continueButtonText}>RESTORE WALLET</Text>
-        </TouchableOpacity>
+          <TouchableOpacity style={styles.continueButton}>
+            <Text style={styles.continueButtonText}>RESTORE WALLET</Text>
+          </TouchableOpacity>
         </ScrollView>
 
-      </RBSheet>
-
-      <RBSheet
-        ref={bottomSheetR}
-        closeOnDragDown={true}
-        closeOnPressMask={true}
-        height={350}
-        customStyles={{
-          container: {
-            borderTopLeftRadius: 20,
-            borderTopRightRadius: 20,
-            padding: 20,
-          },
-        }}
-      >
-        <View style={styles.closeButtonContainerone}>
-          <TouchableOpacity onPress={() => bottomSheetRef.current.close()} style={styles.closeButtonone}>
-            <MaterialCommunityIcons name="close" size={24} color="#000" />
-          </TouchableOpacity>
-        </View>
-
-        <Text style={styles.titleone}>Please create a wallet, in order to use QR code scanner.</Text>
-        <Text style={styles.descriptionone}>
-          QR code scanner allows quickly scanning ETH addresses to send ETH and Tokens, as well as scanning connection codes to connect to MEW web or DApps that support MEW.
-        </Text>
-
-        <TouchableOpacity style={styles.createButtonone}>
-          <Text style={styles.createButtonTextone}>CREATE A WALLET</Text>
-        </TouchableOpacity>
       </RBSheet>
 
     </ScrollView>
