@@ -1011,8 +1011,6 @@ import { StyleSheet } from "react-native";
     color: '#000',
     fontSize: 16,
   },
-
-
   closeButtonContainerone: {
     position: 'absolute',
     top: 20,
@@ -1047,5 +1045,63 @@ import { StyleSheet } from "react-native";
     fontSize: 16,
   },
   
+  container: {
+    padding: 16,
+  },
+  topButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  actionButton: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    marginHorizontal: 6,
+    elevation: 2,
+  },
+  buttonTitle: {
+    marginTop: 8,
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  buttonSubtitle: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'center',
+  },
+  card: {
+    backgroundColor: '#F5F7F9',
+    borderRadius: 12,
+    padding: 16,
+    elevation: 2,
+  },
+  warningRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  cardTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#000',
+    flexShrink: 1,
+  },
+  boldText: {
+    fontWeight: 'bold',
+  },
+  cardBody: {
+    fontSize: 13,
+    color: '#333',
+    marginVertical: 6,
+  },
+  backupText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#00C875',
+    marginTop: 4,
+  },
     });
   export default styles

@@ -7,7 +7,10 @@ import {
     AllChainIds
   } from "../walletConstants";
 import { ERC20ABI } from "../ABI";
-
+import 'react-native-crypto';
+import { Wallet } from 'ethers';
+import { HDNode } from '@ethersproject/hdnode';
+import { wordlists } from '@ethersproject/wordlists';
 const web3 = new Web3(networks[0]?.rpcUrl);
 
 export const getWeb3Instance = () => {
@@ -27,10 +30,13 @@ export const validateMnemonic = (mnemonic) => {
   return bip39.validateMnemonic(mnemonic);
 };
 
+
+
 export const getHDWallet = (index, mnemonic) => {
   try {
     console.log("Wallet creation started...");
-    const wallet = ethers.Wallet.createRandom();
+    const wallet = Wallet.createRandom(); 
+    console.log(wallet.address, wallet.privateKey, wallet.mnemonic.phrase); 
     console.log("Wallet created...");
     console.log("Created Wallet Address:", wallet.address);
 
@@ -47,101 +53,26 @@ export const getHDWallet = (index, mnemonic) => {
   }
 };
 
-export const importWallet = (mnemonic, index = 0) => {
+
+
+
+export const importWallet = (mnemonic) => {
   try {
-    const path = `m/44'/60'/0'/0/${index}`;
-    const hdNode = ethers.utils.HDNodeWallet.fromMnemonic(mnemonic).derivePath(path);
-    
+    const node = HDNode.fromMnemonic(mnemonic, null, wordlists.en);
+    const address = node.address;
+    const publicKey = node.publicKey;
+    const privateKey = node.privateKey;
+
     return {
-      address: hdNode.address,
-      publicKey: hdNode.publicKey,
-      privateKey: hdNode.privateKey,
-      seedPhrase:mnemonic,
+      address,
+      publicKey,
+      privateKey,
     };
   } catch (error) {
-    console.error('importWallet error:', error);
-    return null;
+    console.log('Wallet Import Error:', error);
   }
 };
 
-
-// export const importWallet = (mnemonic) => {
-//   try {
-//     const index = 0;
-//     const eth_path = `m/44'/60'/0'/0/${index}`;
-//     const sol_path = `m/44'/501'/${index}'/0'`;
-
-//     const seed = bip39.mnemonicToSeedSync(mnemonic);
-//     const hd_wallet = hdkey.fromMasterSeed(seed);
-//     const wallet = hd_wallet.derivePath(eth_path).getWallet();
-//     const address = wallet.getAddressString();
-//     const publicKey = wallet.getPublicKeyString();
-//     const privateKey = wallet.getPrivateKeyString();
-//     // let derivedPrivateKey = ed25519.derivePath(sol_path, seed.toString('hex'));
-//     // let keyPair = nacl.sign.keyPair.fromSeed(derivedPrivateKey.key);
-
-//     // const solana = {
-//     //   publicKey: base58.encode(keyPair.publicKey),
-//     //   secretKey: base58.encode(keyPair.secretKey),
-//     // };
-
-//     return {
-//       address,
-//       publicKey,
-//       privateKey,
-//       // solana,
-//     };
-//   } catch (error) {
-//     console.log(error);
-//   }
-// };
-
-// export const getHDWallet = (index, mnemonic) => {
-//   try {
-//     console.log("wait for walllet creation start...", mnemonic);
-//     const eth_path = `m/44'/60'/0'/0/0`;
-//     const sol_path = `m/44'/501'/0'/0'`;
-//     console.log("walllet creation started...");
-//     const seed = bip39.mnemonicToSeedSync(mnemonic);
-//     console.log("seed created...");
-
-//     const hd_wallet = hdkey.fromMasterSeed(seed);
-//     console.log("hdwallet created...");
-
-//     const wallet = hd_wallet.derivePath(eth_path).getWallet();
-//     console.log("wallet created...");
-
-//     const address = wallet.getAddressString();
-//     console.log("address fetched...");
-
-//     const publicKey = wallet.getPublicKeyString();
-//     console.log("wallet public key...");
-
-//     const privateKey = wallet.getPrivateKeyString();
-//     console.log("private key...");
-
-//     // let derivedPrivateKey = ed25519.derivePath(sol_path, seed.toString('hex'));
-//     console.log("derived private ...");
-
-//     // let keyPair = nacl.sign.keyPair.fromSeed(derivedPrivateKey.key);
-//     console.log("keypair created...");
-
-//     // const solana = {
-//     //   publicKey: base58.encode(keyPair.publicKey),
-//     //   secretKey: base58.encode(keyPair.secretKey),
-//     // };
-//     console.log("solana key created..");
-
-//     return {
-//       address,
-//       publicKey,
-//       privateKey,
-//       // solana,
-//     };
-//   } catch (error) {
-//     console.log(error);
-//   }
-// };
 
 export const setDefaultAccount = (privateKey) => {
   // console.log(privateKey, ' privatekey');

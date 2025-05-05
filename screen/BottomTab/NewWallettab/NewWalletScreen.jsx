@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Image, Animated, TextInput } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Icon from 'react-native-vector-icons/FontAwesome5';
@@ -11,9 +11,8 @@ import styles from './styles';
 import { createWallet, setActiveNetwork, setActiveWallet, setAddress, setInitialised, setMnemonic, setPincode, setPrivateKey } from '../../redux/walletSlice';
 import { all_chains_txns, AllChainIds, WalletAssets } from '../../utils/walletConstants';
 import { getHDWallet, importWallet, setDefaultAccount, setProvider } from '../../utils/web3/web3';
-import NewWalletScreen from '../NewWallettab/NewWalletScreen';
 
-const WalletTabScreen = () => {
+const NewWalletScreen = () => {
   const { networks, activeNetwork } = useSelector(state => state.wallet)
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [pin, setPin] = useState('');
@@ -41,26 +40,25 @@ const WalletTabScreen = () => {
   const secondBottomSheetRef = useRef();
   const [recoveryPhrase, setRecoveryPhrase] = useState(Array(12).fill(''));
   const bottomSheetR = useRef();
-  const { wallets, activeWallet } = useSelector((state) => state.wallet);
-  const wallet = wallets[activeWallet];
-  // console.log("wallet",wallets)
+  const wallets = useSelector((state) => state.wallet.wallets[0]?.address);
+  console.log("wallet", wallets)
 
-  const isZeroAddress = () => (wallet?.address === '0x0000000000000000000000000000000000000000');
+  const isZeroAddress =
+    wallets[0]?.address === '0x0000000000000000000000000000000000000000';
 
   const selectSeedPhrase = (state) => state.wallet.mnemonic;
   const seedPhraseword = useSelector(selectSeedPhrase);
   console.log("testseed", seedPhraseword)
 
-  const handleStartUsingWallet = () => {
-    console.log('startPressed set to true');
-    if (!isZeroAddress) {
-      progressSheetRef.current.close();
-      console.log('Navigating to NewWalletScreen');
-      // navigation.navigate('NewWalletScreen');
+  const openBottomSheetone = () => {
+    if (bottomSheetR.current) {
+      bottomSheetR.current.open();
     }
   };
 
   const bottomSheetRe = useRef();
+
+
   const openBottomSheett = () => {
     bottomSheetReff.current.open();
   };
@@ -75,10 +73,14 @@ const WalletTabScreen = () => {
     }
   };
 
+  const closeBottomSheetchk = () => {
+    bottomSheetRe.current.close();
+  };
+
 
   const handleInputChange = (index, value) => {
     const updatedPhrase = [...recoveryPhrase];
-    updatedPhrase[index] = value.toLowerCase();
+    updatedPhrase[index] = value.toLowerCase(); // Make input lowercase
     setRecoveryPhrase(updatedPhrase);
   };
 
@@ -305,11 +307,7 @@ const WalletTabScreen = () => {
     setProvider(networks[networkindex]?.rpcUrl); // changing rpc in app
     setDropdownVisible(false);
   };
-  console.log(wallet?.address, isZeroAddress(), ' adsfgsdfgasdfg')
-  if (!isZeroAddress()) {
-    console.log('new wallet')
-    return <NewWalletScreen />
-  }
+
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -343,11 +341,7 @@ const WalletTabScreen = () => {
 
         </View>
 
-        {/* <TouchableOpacity style={styles.iconCircle}
-              onPress={openBottomSheetone}
-            >
-              <MaterialCommunityIcons name="gas-station-outline" size={20} color={'#000'} />
-            </TouchableOpacity> */}
+
 
         <TouchableOpacity style={styles.iconCircle}
           onPress={() => scannerRef.current.open()}
@@ -361,27 +355,57 @@ const WalletTabScreen = () => {
       <View style={styles.startCard}>
 
         <Text style={styles.startTitle}>
-          Start your{'\n'}Ethereum journey
+          My main account
+        </Text>
+        <Text style={styles.startTitle}>
+          {wallets}
         </Text>
 
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Text style={styles.startTitle}>$0.00</Text>
+          <MaterialCommunityIcons name="arrow-up-right" size={20} color="#000" style={{ marginLeft: 5 }} />
+        </View>
 
-        <TouchableOpacity style={styles.createWalletButton}
-          onPress={openBottomSheet}
-        >
-          <MaterialCommunityIcons name="plus" size={18} color="white" style={{ marginRight: 10 }} />
-          <Text style={styles.createWalletButtonText}>CREATE A WALLET</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.importWalletButton}
-          onPress={openBottomSheett}
-        >
-          <MaterialCommunityIcons name="wallet" size={18} color="#000" style={{ marginRight: 10 }} />
-          <Text style={styles.importWalletText}>IMPORT EXISTING WALLET</Text>
-        </TouchableOpacity>
+        <Text style={styles.startTitle}>
+          0 ETH
+          and no tokens
+        </Text>
       </View>
 
 
+      <View style={styles.containerTot}>
+
+        <View style={styles.topButtonsContainerTot}>
+          <TouchableOpacity style={styles.actionButtonTot}>
+            <MaterialCommunityIcons name="download" size={26} color="#00C875" />
+            <Text style={styles.buttonTitleTot}>Receive</Text>
+            <Text style={styles.buttonSubtitleTot}>From existing wallet</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.actionButtonTot}>
+            <MaterialCommunityIcons name="credit-card-outline" size={26} color="#00C875" />
+            <Text style={styles.buttonTitleTot}>Buy Ether</Text>
+            <Text style={styles.buttonSubtitleTot}>Visa or Mastercard</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.cardTot}>
+          <View style={styles.warningRowTot}>
+            <MaterialCommunityIcons name="shield-alert" size={24} color="#D70000" />
+            <Text style={styles.cardTitleTot}>
+              {'  '}Action required: <Text style={styles.boldTextTot}>not backed up</Text>
+            </Text>
+          </View>
+          <Text style={styles.cardBodyTot}>
+            If your device gets lost or stolen, or if there's an unexpected hardware error, you will lose your funds forever.
+          </Text>
+          <TouchableOpacity>
+            <Text style={styles.backupTextTot}>BACK UP NOW</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* 
       <View style={styles.sectionContainer}>
         <Text style={styles.sectionHeading}>Other things</Text>
 
@@ -417,7 +441,7 @@ const WalletTabScreen = () => {
           <Text style={styles.supportSubtitle}>Our friendly support team is here to help.</Text>
         </View>
         <Image source={require('../../../assets/home/Asset.png')} style={styles.supportImage} />
-      </View>
+      </View> */}
 
       <RBSheet
         ref={bottomSheetRef}
@@ -605,7 +629,7 @@ const WalletTabScreen = () => {
               <Animated.View
                 style={[styles.cursor, { opacity: cursorAnim }]}
               />
-              <TouchableOpacity style={styles.button} onPress={handleStartUsingWallet}>
+              <TouchableOpacity style={styles.button}>
                 <Text style={styles.buttonText}>START USING WALLET</Text>
               </TouchableOpacity>
             </>
@@ -780,4 +804,4 @@ const WalletTabScreen = () => {
   );
 };
 
-export default WalletTabScreen;
+export default NewWalletScreen;
