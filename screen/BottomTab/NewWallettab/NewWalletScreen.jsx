@@ -1,322 +1,138 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image, Animated, TextInput } from 'react-native';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import Icon from 'react-native-vector-icons/FontAwesome5';
-import RBSheet from 'react-native-raw-bottom-sheet';
-import { useRef } from 'react';
-import { useNavigation } from '@react-navigation/native';
-import { Dimensions } from 'react-native';
+import React, { useRef, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  StatusBar,
+  FlatList,
+  Platform,
+  Image,
+  TextInput,
+} from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from 'react-native-responsive-screen';
 import { useDispatch, useSelector } from 'react-redux';
-import styles from './styles';
-import { createWallet, setActiveNetwork, setActiveWallet, setAddress, setInitialised, setMnemonic, setPincode, setPrivateKey } from '../../redux/walletSlice';
-import { all_chains_txns, AllChainIds, WalletAssets } from '../../utils/walletConstants';
-import { getHDWallet, importWallet, setDefaultAccount, setProvider } from '../../utils/web3/web3';
+import { setActiveNetwork } from '../../redux/walletSlice';
+import { setProvider } from '../../utils/web3/web3';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useNavigation } from '@react-navigation/native';
+import RBSheet from 'react-native-raw-bottom-sheet';
+
 
 const NewWalletScreen = () => {
   const { networks, activeNetwork } = useSelector(state => state.wallet)
   const [dropdownVisible, setDropdownVisible] = useState(false);
-  const [pin, setPin] = useState('');
-  const [confirmPin, setConfirmPin] = useState('');
-  const [scannerModalVisible, setScannerModalVisible] = useState(false);
-  const navigation = useNavigation();
-  const screenHeight = Dimensions.get('window').height;
-  const progressSheetRef = useRef();
-  const [currentStep, setCurrentStep] = useState(0);
-  const cursorAnim = useRef(new Animated.Value(0)).current;
-  const bottomSheetRef = useRef();
-  const pinSheetRef = useRef();
-  const confirmPinSheetRef = useRef();
-  const scannerSheetRef = useRef();
-  const scannerRef = useRef();
+  const [isBackedUp, setIsBackedUp] = useState(false);
+  const refAddAccountSheet = useRef();
+  const [nickname, setNickname] = useState('');
+  const [cards, setCards] = useState([
+    { type: 'wallet', gradient: ['#b5de2e', '#c7f526', '#c1ff5a'], address: '0xE38B...5Db5' },
+    { type: 'addAccount' }
+  ]);
+
+  const refRBSheet = useRef();
+  const refRBSheetword = useRef();
+  const refRBSheetwordfinish = useRef();
+
+
   const dispatch = useDispatch();
-  const [loading, setLoading] = useState(false);
-  const { pincode } = useSelector(state => state.wallet);
-  const [mnemonicWords, setMnemonicWords] = useState("");
-  const [mnemonicWordsArray, setMnemonicWordsArray] = useState([]);
-  const [mnemonicShuffled, setMnemonicShuffled] = useState([]);
-  const [dropdownVisiblee, setDropdownVisiblee] = useState(false);
-  const bottomSheetReff = React.useRef();
-  const [isVisible, setIsVisible] = useState(false);
-  const secondBottomSheetRef = useRef();
-  const [recoveryPhrase, setRecoveryPhrase] = useState(Array(12).fill(''));
-  const bottomSheetR = useRef();
-  const wallets = useSelector((state) => state.wallet.wallets[0]?.address);
-  console.log("wallet", wallets)
+  const navigation = useNavigation();
 
-  const isZeroAddress =
-    wallets[0]?.address === '0x0000000000000000000000000000000000000000';
-
-  const selectSeedPhrase = (state) => state.wallet.mnemonic;
-  const seedPhraseword = useSelector(selectSeedPhrase);
-  console.log("testseed", seedPhraseword)
-
-  const openBottomSheetone = () => {
-    if (bottomSheetR.current) {
-      bottomSheetR.current.open();
-    }
-  };
-
-  const bottomSheetRe = useRef();
-
-
-  const openBottomSheett = () => {
-    bottomSheetReff.current.open();
-  };
-
-  const closeBottomSheett = () => {
-    bottomSheetReff.current.close();
-  };
-
-  const openBottomSheetchk = () => {
-    if (bottomSheetRe.current) {
-      bottomSheetRe.current.open();
-    }
-  };
-
-  const closeBottomSheetchk = () => {
-    bottomSheetRe.current.close();
-  };
-
-
-  const handleInputChange = (index, value) => {
-    const updatedPhrase = [...recoveryPhrase];
-    updatedPhrase[index] = value.toLowerCase(); // Make input lowercase
-    setRecoveryPhrase(updatedPhrase);
-  };
-
-
-  const steps = [
-    "Generating your Ethereum address",
-    "Encrypting your private key using your PIN",
-    "Saving your encrypted keys to a local secure vault on this device",
-    "All done!\nYour wallet is now ready.",
+  const gradientPool = [
+    ['#b5de2e', '#c7f526', '#c1ff5a'],
+    ['#ff9a9e', '#fad0c4', '#fad0c4'],
+    ['#a18cd1', '#fbc2eb', '#fbc2eb'],
+    ['#f6d365', '#fda085', '#fda085'],
+    ['#84fab0', '#8fd3f4', '#8fd3f4'],
+    ['#a6c0fe', '#f68084', '#f68084'],
+    ['#fccb90', '#d57eeb', '#d57eeb'],
   ];
 
-  const createPassword = async (data) => {
-    try {
-      setLoading(true);
-      const HDWallet = getHDWallet(0, mnemonic);
-      let mnemonic = HDWallet?.seedPhrase;
-      // console.log("HDWallet:", HDWallet);      
-      dispatch(setAddress(HDWallet?.address));
-      setDefaultAccount(HDWallet?.privateKey);
-      dispatch(setPrivateKey(HDWallet?.privateKey));
-      dispatch(setMnemonic(mnemonic));
-      dispatch(
-        createWallet({
-          index: 0,
-          address: HDWallet?.address,
-          privateKey: HDWallet?.privateKey,
-          name: 'Wallet-1',
-          networks: AllChainIds,
-          assets: WalletAssets,
-          seed: mnemonic,
-          transactions: all_chains_txns,
-        })
-      );
-      dispatch(setActiveWallet(0));
-      dispatch(setInitialised(true));
-      setLoading(false);
-      return HDWallet;
-    } catch (e) {
-      setLoading(false);
-      return false;
-    }
+  const addNewWalletCard = () => {
+    const newGradient = gradientPool[Math.floor(Math.random() * gradientPool.length)];
+    const newAddress = '0x' + Math.random().toString(16).substr(2, 8) + '...' + Math.random().toString(16).substr(2, 4);
+    const newCard = { type: 'wallet', gradient: newGradient, address: newAddress };
+
+    const updatedCards = [...cards.filter(c => c.type !== 'addAccount'), newCard, { type: 'addAccount' }];
+    setCards(updatedCards);
   };
 
-  const handleRestoreWallet = () => {
-    const mnemonic = recoveryPhrase.join(' ').trim();
-
-    if (mnemonic.split(' ').length !== 12) {
-      console.error('Please enter all 12 words correctly');
-      return;
-    }
-
-    const restoredWallet = importWallet(mnemonic);
-
-    if (restoredWallet) {
-      dispatch(setAddress(restoredWallet.address));
-      dispatch(setPrivateKey(restoredWallet.privateKey));
-      console.log('Wallet restored:', restoredWallet);
-    } else {
-      console.error('Failed to restore the wallet');
-    }
-  };
-
-
-  const startProgressSteps = () => {
-    progressSheetRef.current.open();
-
-    let stepInterval = setInterval(() => {
-      setCurrentStep(prev => {
-        if (prev === steps.length - 1) {
-          clearInterval(stepInterval);
-        }
-        return prev + 1;
-      });
-    }, 2000);
-
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(cursorAnim, { toValue: 1, duration: 500, useNativeDriver: false }),
-        Animated.timing(cursorAnim, { toValue: 0, duration: 500, useNativeDriver: false }),
-      ])
-    ).start();
-  };
-
-  const handleConfirmPinPress = async (num) => {
-    if (confirmPin.length < 6) {
-      setConfirmPin(confirmPin + num);
-    }
-
-    if (confirmPin.length + 1 === 6) {
-      const finalPin = confirmPin + num;
-      console.log("finalPin:", finalPin);
-      console.log("pin:", pin);
-      if (finalPin === pin) {
-        confirmPinSheetRef.current.close();
-        dispatch(setPincode(finalPin));
-        await createPassword({});
-        setTimeout(() => {
-          startProgressSteps();
-        }, 500);
-      } else {
-        alert('❌ PINs Do Not Match! Try Again.');
-        setConfirmPin('');
-      }
-    }
-  };
-
-
-  const renderStep = (text, index) => {
-    const isActive = index === currentStep;
-    const isDone = index < currentStep;
-    return (
-      <Text
-        key={index}
-        style={[
-          styles.stepText,
-          isDone && styles.stepDone,
-          isActive && styles.stepActive,
-        ]}
-      >
-        {text}
-      </Text>
-    );
-  };
-
-  const handleBackspace = (isConfirm = false) => {
-    if (isConfirm) {
-      if (confirmPin && confirmPin.length > 0) {
-        setConfirmPin(confirmPin.slice(0, -1));
-      } else {
-        console.log("No value to remove from confirmPin");
-      }
-    } else {
-      if (pin && pin.length > 0) {
-        setPin(pin.slice(0, -1));
-      } else {
-        console.log("No value to remove from pin");
-      }
-    }
-  };
-
-
-  const handlePinPress = (num) => {
-    if (pin.length < 6) {
-      setPin(pin + num);
-    }
-    if (pin.length + 1 === 6) {
-      dispatch(setPincode(pin + num))
-      setTimeout(() => {
-        pinSheetRef.current.close();
-        confirmPinSheetRef.current.open();
-      }, 300);
-    }
-  };
-
-  const renderDots = (value) => (
-    <View style={styles.pinDotsContainer}>
-      {value.padEnd(6, ' ').split('').map((item, index) => (
-        <View
-          key={index}
-          style={[styles.pinDot, { backgroundColor: item.trim() ? '#000' : 'transparent' }]}
-        />
-      ))}
-    </View>
-  );
-
-  const renderNumberPad = (onPressFunc, isConfirm = false) => (
-    <View style={styles.numberPad}>
-      {['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'].map((num) => (
-        <TouchableOpacity
-          key={num}
-          style={styles.numberKey}
-          onPress={() => onPressFunc(num)}
+  const renderCard = (item) => {
+    if (item.type === 'wallet') {
+      return (
+        <LinearGradient
+          colors={item.gradient}
+          style={styles.card}
         >
-          <Text style={styles.numberText}>{num}</Text>
-        </TouchableOpacity>
-      ))}
-      <TouchableOpacity
-        style={styles.numberKey}
-        onPress={() => handleBackspace(isConfirm)}
-      >
-        <MaterialCommunityIcons name="backspace-outline" size={24} color="#000" />
-      </TouchableOpacity>
-    </View>
-  );
-
-  const openBottomSheet = () => {
-    bottomSheetRef.current.open();
-    navigation.getParent()?.setOptions({
-      tabBarStyle: { display: 'none' }
-    });
+          <Text style={styles.accountLabel}>My main account</Text>
+          <Text style={styles.address}>0xE38B...5Db5</Text>
+          <View style={styles.balanceRow}>
+            <Text style={styles.balance}>$0.00 </Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Transaction')}>
+              <Icon name="chevron-right" size={wp('7%')} color="white" />
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.ethText}>0 ETH and no tokens</Text>
+          <View style={styles.iconRow}>
+            <Icon name="arrow-down-bold" size={wp('6%')} color="white" style={styles.icon} />
+            <Icon name="arrow-up-bold" size={wp('6%')} color="white" style={styles.icon} />
+          </View>
+        </LinearGradient>
+      );
+    } else {
+      return (
+        <View style={[styles.card, styles.addCard]}>
+          <Text style={styles.addTitle}>Add more accounts</Text>
+          <Text style={styles.addSub}>Use accounts to manage your assets separately</Text>
+          <TouchableOpacity
+            style={styles.addBtn}
+            onPress={addNewWalletCard} // 👈 attach here
+          >
+            <Icon name="plus" size={wp('4%')} color="white" />
+            <Text style={styles.addBtnText}>ADD NEW ACCOUNT</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
   };
 
-  const closeBottomSheet = () => {
-    bottomSheetRef.current.close();
-    navigation.getParent()?.setOptions({
-      tabBarStyle: { display: 'flex' }
-    });
-  };
 
-  const openPinModal = () => {
-    bottomSheetRef.current.close();
-    navigation.getParent()?.setOptions({
-      tabBarStyle: { display: 'none' }
-    });
-    setTimeout(() => {
-      pinSheetRef.current.open();
-    }, 300);
+  const selectNetwork = (networkindex) => {
+    dispatch(setActiveNetwork(networkindex));
+    setProvider(networks[networkindex]?.rpcUrl);
+    setDropdownVisible(false);
   };
-
-  const closePinModal = () => {
-    pinSheetRef.current.close();
-    navigation.getParent()?.setOptions({
-      tabBarStyle: { display: 'flex' }
-    });
-  };
-
 
   const toggleDropdown = () => {
     setDropdownVisible(!dropdownVisible);
   };
 
-  const selectNetwork = (networkindex) => {
-    dispatch(setActiveNetwork(networkindex));
-    setProvider(networks[networkindex]?.rpcUrl); // changing rpc in app
-    setDropdownVisible(false);
-  };
+  const recoveryWords = [
+    'obey', 'index', 'cable', 'light', 'echo', 'focus',
+    'jazz', 'stamp', 'lunar', 'magic', 'spoon', 'zebra'
+  ];
 
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView
+      contentContainerStyle={styles.container}
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
+    >
+      <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
+
       <View style={styles.header}>
         <View style={{ position: 'relative' }}>
           <TouchableOpacity style={styles.networkButton} onPress={toggleDropdown}>
             <Image source={networks[activeNetwork]?.localicon ? networks[activeNetwork]?.chainIcon : { uri: networks[activeNetwork].chainIcon }} style={styles.networkIcon} />
             <Text style={styles.networkText}>{networks[activeNetwork].name}</Text>
-            <Icon name="chevron-down" size={12} color="#000" style={styles.chevronIcon} />
+            <Icon name="chevron-down" size={18} color="#000" style={styles.chevronIcon} />
           </TouchableOpacity>
 
           {dropdownVisible && (
@@ -338,89 +154,74 @@ const NewWalletScreen = () => {
             </View>
           )}
 
-
         </View>
-
-
-
         <TouchableOpacity style={styles.iconCircle}
-          onPress={() => scannerRef.current.open()}
         >
           <MaterialCommunityIcons name="qrcode-scan" size={22} color="#000" />
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.walletHeading}>Wallet</Text>
+      <FlatList
+        horizontal
+        data={cards}
+        keyExtractor={(item, index) => index.toString()}
+        renderItem={({ item }) => renderCard(item)}
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.flatListSpacing}
+      />
 
-      <View style={styles.startCard}>
 
-        <Text style={styles.startTitle}>
-          My main account
-        </Text>
-        <Text style={styles.startTitle}>
-          {wallets}
-        </Text>
-
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <Text style={styles.startTitle}>$0.00</Text>
-          <MaterialCommunityIcons name="arrow-up-right" size={20} color="#000" style={{ marginLeft: 5 }} />
-        </View>
-
-        <Text style={styles.startTitle}>
-          0 ETH
-          and no tokens
-        </Text>
+      <View style={styles.actionRow}>
+        <TouchableOpacity style={styles.actionCard}>
+          <Image source={require('../../../assets/home/receive.png')}
+          style={styles.supportImagee} />
+          <Text style={styles.actionText}>Receive</Text>
+          <Text style={styles.subText}>From existing wallet</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.actionCard}>
+          <Image source={require('../../../assets/home/buy.png')}
+ style={styles.supportImagee} />
+          <Text style={styles.actionText}>Buy Crypto</Text>
+          <Text style={styles.subText}>Visa or Mastercard</Text>
+        </TouchableOpacity>
       </View>
-
-
-      <View style={styles.containerTot}>
-
-        <View style={styles.topButtonsContainerTot}>
-          <TouchableOpacity style={styles.actionButtonTot}>
-            <MaterialCommunityIcons name="download" size={26} color="#00C875" />
-            <Text style={styles.buttonTitleTot}>Receive</Text>
-            <Text style={styles.buttonSubtitleTot}>From existing wallet</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.actionButtonTot}>
-            <MaterialCommunityIcons name="credit-card-outline" size={26} color="#00C875" />
-            <Text style={styles.buttonTitleTot}>Buy Ether</Text>
-            <Text style={styles.buttonSubtitleTot}>Visa or Mastercard</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.cardTot}>
-          <View style={styles.warningRowTot}>
-            <MaterialCommunityIcons name="shield-alert" size={24} color="#D70000" />
-            <Text style={styles.cardTitleTot}>
-              {'  '}Action required: <Text style={styles.boldTextTot}>not backed up</Text>
-            </Text>
-          </View>
-          <Text style={styles.cardBodyTot}>
+      {!isBackedUp && (
+        <View style={styles.warningCard}>
+          <MaterialCommunityIcons name="shield-alert" size={22} color="red" />
+          <Text style={styles.warningText}>Action required: not backed up</Text>
+          <Text style={styles.warningDesc}>
             If your device gets lost or stolen, or if there's an unexpected hardware error, you will lose your funds forever.
           </Text>
-          <TouchableOpacity>
-            <Text style={styles.backupTextTot}>BACK UP NOW</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
 
-      {/* 
+
+          <TouchableOpacity
+            style={styles.backupButton}
+            onPress={() => refRBSheet.current.open()}
+          >
+            <Text style={styles.backupText}>BACK UP NOW</Text>
+          </TouchableOpacity>
+
+        </View>
+      )}
+
       <View style={styles.sectionContainer}>
         <Text style={styles.sectionHeading}>Other things</Text>
 
         <TouchableOpacity style={styles.sectionItem}>
-          <Icon name="book" size={18} color="#000" style={styles.sectionIcon} />
+          <Image source={require('../../../assets/home/Assetbookh.png')}
+            style={styles.sectionIcon} />
           <Text style={styles.sectionText}>Education center</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.sectionItem}>
-          <Icon name="cog" size={18} color="#000" style={styles.sectionIcon} />
+          <Image source={require('../../../assets/home/Assetsetting.png')}
+            style={styles.sectionIcon} />
           <Text style={styles.sectionText}>Settings and support</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.sectionItem}>
-          <Icon name="heart" size={18} color="#000" style={styles.sectionIcon} />
+          <Image source={require('../../../assets/home/AssetDonate.png')}
+            style={styles.sectionIcon} />
           <Text style={styles.sectionText}>Donate</Text>
         </TouchableOpacity>
       </View>
@@ -441,367 +242,610 @@ const NewWalletScreen = () => {
           <Text style={styles.supportSubtitle}>Our friendly support team is here to help.</Text>
         </View>
         <Image source={require('../../../assets/home/Asset.png')} style={styles.supportImage} />
-      </View> */}
+      </View>
 
       <RBSheet
-        ref={bottomSheetRef}
-        closeOnDragDown={true}
-        closeOnPressMask={true}
-        height={screenHeight * 0.85}
+        ref={refRBSheet}
+        height={780}
+        openDuration={250}
         customStyles={{
           container: {
             borderTopLeftRadius: 20,
             borderTopRightRadius: 20,
-            paddingHorizontal: 24,
-            paddingTop: 24,
+            paddingHorizontal: 20,
+            paddingVertical: 25,
           },
         }}
       >
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <TouchableOpacity onPress={closeBottomSheet} style={styles.safetyClose}>
-            <Text style={styles.safetyCloseText}>×</Text>
-          </TouchableOpacity>
+        <View style={styles.contentback}>
 
-          <Image
-            source={require('../../../assets/home/robot.png')}
-            style={styles.safetyImage}
-            resizeMode="contain"
+          <MaterialCommunityIcons
+            name="close"
+            size={24}
+            color="#000"
+            onPress={() => refRBSheet.current.close()}
           />
-
-          <Text style={styles.safetyTitle}>Crypto safety 101</Text>
-          <Text style={styles.safetySubheading}>
-            In crypto you are your own bank. With that great power comes great responsibility.
+          <MaterialCommunityIcons
+            name="shield-alert-outline"
+            size={300}
+            color="#000"
+          />
+          {/* <Text style={styles.headingback}>Back up your wallet</Text> */}
+          <Text style={styles.headingback}>Back up your{"\n"}wallet</Text>
+          <Text style={styles.descriptionback}>
+            With MEW wallet you are your own bank. No one but you has access to your private key. Not even MEWforce.
           </Text>
+          <Text style={styles.descriptionback}>
+            Without a backup, if you lose your device, or even simply delete the app, you will lose your funds forever.
+          </Text>
+          <TouchableOpacity style={styles.backupButtonback}
+            onPress={() => refRBSheetword.current.open()}
+          >
+            <Text style={styles.backupButtonTextback}>BACK UP NOW</Text>
+          </TouchableOpacity>
+        </View>
+      </RBSheet>
 
-          {[1, 2, 3].map((item) => (
-            <View key={item} style={styles.safetyTipBlock}>
-              <View style={styles.safetyNumberCircle}>
-                <Text style={styles.safetyNumberText}>{item}</Text>
-              </View>
-              <View style={styles.safetyTipTextBlock}>
-                <Text style={styles.safetyTipTitle}>
-                  {item === 1
-                    ? 'Back it up, and keep your backup safe'
-                    : item === 2
-                      ? 'Always double-check everything'
-                      : 'Be wary of phishing and scams'}
+      <RBSheet
+        ref={refRBSheetword}
+        height={780}
+        openDuration={250}
+        customStyles={{
+          container: {
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+            paddingHorizontal: 20,
+            paddingVertical: 25,
+          },
+        }}
+      >
+        <View style={styles.sheetContainercode}>
+          <Text style={styles.headerTextcode}>Here is your{"\n"}recovery phrase</Text>
+          <Text style={styles.subTextcode}>Write it down on paper.Resist temptation to email it to yourself or screenshot it.</Text>
+
+          <View style={styles.recoveryBoxcode}>
+            <View style={styles.columncode}>
+              {recoveryWords.slice(0, 6).map((word, index) => (
+                <Text key={index} style={styles.wordTextcode}>
+                  {index + 1}. {word}
                 </Text>
-                <Text style={styles.safetyTipDescription}>
-                  {item === 1
-                    ? 'If you lose your wallet backup information, no one (not even MEWforce) can recover it, and you will lose your funds.'
-                    : item === 2
-                      ? 'If you send assets to the wrong address, no one can reverse or recover that transaction, and you will lose your funds.'
-                      : 'If someone offers you something that is too good to be true, it probably is.'}
-                </Text>
-              </View>
+              ))}
             </View>
-          ))}
+            <View style={styles.columncode}>
+              {recoveryWords.slice(6, 12).map((word, index) => (
+                <Text key={index + 6} style={styles.wordTextcode}>
+                  {index + 7}. {word}
+                </Text>
+              ))}
+            </View>
+          </View>
 
           <TouchableOpacity
-            style={styles.safetyCTA}
+            style={styles.backupButtoncode}
+            onPress={() => refRBSheetwordfinish.current.open()}
+          >
+            <Text style={styles.backupButtonTextcode}>FINISH</Text>
+          </TouchableOpacity>
+        </View>
+      </RBSheet>
+
+      <RBSheet
+        ref={refRBSheetwordfinish}
+        height={780}
+        openDuration={250}
+        customStyles={{
+          container: {
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+            padding: 20,
+            alignItems: 'center',
+          },
+        }}
+      >
+
+        <View style={styles.sheetContainercode}>
+          <MaterialCommunityIcons
+            name="shield-check-outline"
+            size={300}
+            color="#000"
+          />
+          <Text style={styles.titlefinish}>Your wallet is now{"\n"}backed up!</Text>
+          <Text style={styles.descriptionfinish}>
+            Don’t show your recovery phrase to anyone.
+            Protect it like the ELEVENTEEN GOOGILLION dollars
+            it will one day be worth (probably).
+          </Text>
+
+          <TouchableOpacity
+            style={styles.doneButtonfinish}
             onPress={() => {
-              bottomSheetRef.current.close();
-              setTimeout(() => pinSheetRef.current.open(), 300);
+              setIsBackedUp(true);
+              refRBSheetwordfinish.current.close();
+              refRBSheetword.current.close();
+              refRBSheet.current.close();
             }}
           >
-            <Text style={styles.safetyCTAText}>CREATE A WALLET</Text>
+            <Text style={styles.doneButtonTextfinish}>DONE</Text>
           </TouchableOpacity>
-        </ScrollView>
+        </View>
       </RBSheet>
 
+
       <RBSheet
-        ref={pinSheetRef}
-        closeOnDragDown={false}
-        closeOnPressMask={false}
-        height={screenHeight * 0.9}
+        ref={refAddAccountSheet}
+        height={780}
+        openDuration={250}
         customStyles={{
           container: {
             borderTopLeftRadius: 20,
             borderTopRightRadius: 20,
-            paddingTop: 30,
-            paddingHorizontal: 25,
-          },
-        }}
-      >
-        <TouchableOpacity
-          onPress={() => pinSheetRef.current.close()}
-          style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 25 }}
-        >
-          <MaterialCommunityIcons name="arrow-left" size={24} color="#000" />
-          <Text style={{ fontSize: 16, fontWeight: '600', marginLeft: 10 }}>Create a wallet</Text>
-        </TouchableOpacity>
-
-        <Text style={{ fontSize: 26, fontWeight: 'bold', marginBottom: 8 }}>Create a PIN</Text>
-        <Text style={{ fontSize: 14, color: '#666', marginBottom: 40 }}>
-          So no one else but you can unlock your wallet.
-        </Text>
-
-        {renderDots(pin)}
-
-        <Text style={{ fontSize: 12, color: '#888', textAlign: 'center', marginTop: 40, marginBottom: 20 }}>
-          PINs are just as secure as long passwords, but easier to use and remember.
-        </Text>
-
-        {renderNumberPad(handlePinPress)}
-      </RBSheet>
-
-      <RBSheet
-        ref={confirmPinSheetRef}
-        closeOnDragDown={false}
-        closeOnPressMask={false}
-        height={screenHeight * 0.9}
-        customStyles={{
-          container: {
-            borderTopLeftRadius: 20,
-            borderTopRightRadius: 20,
-            paddingTop: 30,
-            paddingHorizontal: 25,
-          },
-        }}
-      >
-        <TouchableOpacity
-          onPress={() => confirmPinSheetRef.current.close()}
-          style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 25 }}
-        >
-          <MaterialCommunityIcons name="arrow-left" size={24} color="#000" />
-          <Text style={{ fontSize: 16, fontWeight: '600', marginLeft: 10 }}>Create a wallet</Text>
-        </TouchableOpacity>
-
-        <Text style={{ fontSize: 26, fontWeight: 'bold', marginBottom: 8 }}>Type your PIN again</Text>
-        <Text style={{ fontSize: 14, color: '#666', marginBottom: 40 }}>
-          There will be <Text style={{ fontWeight: 'bold', color: '#00C2AA' }}>NO 'Restore PIN' button</Text>.{"\n"}
-          Make sure you remember it.
-        </Text>
-
-        {renderDots(confirmPin)}
-
-        <Text style={{ fontSize: 12, color: '#888', textAlign: 'center', marginTop: 40, marginBottom: 20 }}>
-          Since you're going to be your own bank, we won’t be able to help if you lose your PIN.
-        </Text>
-
-        {renderNumberPad(handleConfirmPinPress, true)}
-      </RBSheet>
-
-      <RBSheet
-        ref={scannerSheetRef}
-        closeOnDragDown={true}
-        closeOnPressMask={true}
-        height={400}
-        customStyles={{
-          container: {
-            borderTopLeftRadius: 20,
-            borderTopRightRadius: 20,
+            padding: 20,
             alignItems: 'center',
-            padding: 25,
           },
         }}
       >
-        <TouchableOpacity style={styles.crossButton} onPress={() => scannerSheetRef.current.close()}>
-          <Text style={styles.crossText}>×</Text>
-        </TouchableOpacity>
-        <Text style={styles.modalTitle}>
-          Please create a wallet,{'\n'}in order to use QR code scanner.
-        </Text>
-        <Text style={styles.modalSubtitle}>
-          QR code scanner allows quickly scanning ETH addresses to send ETH and Tokens...
-        </Text>
-        <TouchableOpacity style={styles.createWalletButton}>
-          <Text style={styles.createWalletButtonText}>CREATE A WALLET</Text>
-        </TouchableOpacity>
-      </RBSheet>
+        <Text style={styles.sheetTitleaccount}>Add Account</Text>
+        <Text style={styles.sheetLabelaccount}>Account Nickname</Text>
 
-      <RBSheet
-        ref={progressSheetRef}
-        height={screenHeight * 0.6}
-        customStyles={{
-          container: {
-            padding: 20,
-            borderTopLeftRadius: 20,
-            borderTopRightRadius: 20,
-          },
-        }}
-      >
-        <View>
-          {steps.map((step, index) => renderStep(step, index))}
+        <TextInput
+          style={styles.inputaccount}
+          placeholder="e.g. Private funds, Airdrops"
+          value={nickname}
+          onChangeText={text => setNickname(text)}
+          placeholderTextColor="#999"
+        />
 
-          {currentStep >= steps.length - 1 && (
-            <>
-              <Animated.View
-                style={[styles.cursor, { opacity: cursorAnim }]}
-              />
-              <TouchableOpacity style={styles.button}>
-                <Text style={styles.buttonText}>START USING WALLET</Text>
-              </TouchableOpacity>
-            </>
-          )}
-        </View>
+        <TouchableOpacity
+          style={[
+            styles.addButtonaccount,
+            { backgroundColor: nickname ? '#00C2AA' : '#ccc' }
+          ]}
+          disabled={!nickname}
+          onPress={() => {
+            // You can save the nickname here
+            refAddAccountSheet.current.close();
+            setNickname('');
+          }}
+        >
+          <Text style={styles.addButtonTextaccount}>Add</Text>
+        </TouchableOpacity>
       </RBSheet>
 
 
       <RBSheet
-        ref={scannerRef}
-        closeOnDragDown={true}
-        closeOnPressMask={true}
-        height={570}
+        ref={refRBSheet}
+        height={280}
+        openDuration={250}
         customStyles={{
           container: {
             borderTopLeftRadius: 20,
             borderTopRightRadius: 20,
             padding: 20,
+            backgroundColor: 'white',
+            alignItems: 'center',
           },
         }}
       >
-        <Text style={styles.heading}>Current network fees</Text>
-
-        <View style={styles.gasRow}>
-          <View style={styles.gasLeft}>
-            <MaterialCommunityIcons name="gas-station-outline" size={20} color={'#000'} />
-            <Text style={styles.gasText}>0 gwei</Text>
-          </View>
-          <Text style={styles.ethValue}>$1,831.77</Text>
-        </View>
-
-        <Text style={styles.subheading}>How much Ether do I need?</Text>
-
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Send Ether</Text>
-          <View style={styles.cardRight}>
-            <Text style={styles.cardCost}>$0.03</Text>
-            <Text style={styles.cardSub}>0.000153 ETH</Text>
-          </View>
-        </View>
-
-        <View style={styles.card}>
-          <View>
-            <Text style={styles.cardTitle}>Send Tokens</Text>
-            <Text style={styles.cardSub}>Depends on the token</Text>
-          </View>
-          <View style={styles.cardRight}>
-            <Text style={styles.cardCost}>$0.11–$0.20</Text>
-            <Text style={styles.cardSub}>0.0000583 ETH–{"\n"}0.000109 ETH</Text>
-          </View>
-        </View>
-
-        <View style={styles.card}>
-          <View>
-            <Text style={styles.cardTitle}>Swap tokens</Text>
-            <Text style={styles.cardSub}>Depends on pair and provider</Text>
-          </View>
-          <View style={styles.cardRight}>
-            <Text style={styles.cardCost}>$0.53–$1.07</Text>
-            <Text style={styles.cardSub}>0.000291 ETH–{"\n"}0.000583 ETH</Text>
-          </View>
-        </View>
-
-        <Text style={styles.infoText}>
-          Every transaction requires a small amount of Ether to execute. Fees are collected by Ethereum miners and depend on network congestion.
+        <Text style={styles.title}>Your ETH balance is too low</Text>
+        <Text style={styles.description}>
+          Every transaction on Ethereum requires a gas fee, payable only in ETH. When your ETH balance is low, you won't be able to send or swap tokens until you add more ETH to your wallet. Purchase more ETH directly on the Swap tab.
         </Text>
 
-        <TouchableOpacity style={styles.buyButton}>
-          <Text style={styles.buyText}>BUY ETHER</Text>
+        <TouchableOpacity style={styles.button}>
+          <Text style={styles.buttonText}>FUND MY ACCOUNT</Text>
         </TouchableOpacity>
-
-        <Text style={styles.footer}>HOW ARE FEES DETERMINED?</Text>
-      </RBSheet>
-
-      <RBSheet
-        ref={bottomSheetReff}
-        closeOnDragDown={true}
-        closeOnPressMask={true}
-        height={800}
-        customStyles={{
-          container: {
-            borderTopLeftRadius: 20,
-            borderTopRightRadius: 20,
-            padding: 20,
-          },
-        }}
-      >
-        <View style={styles.closeButtonContainer}>
-          <TouchableOpacity onPress={closeBottomSheett} style={styles.closeButton}>
-            <MaterialCommunityIcons name="close" size={24} color="#000" />
-          </TouchableOpacity>
-        </View>
-
-        <Text style={styles.titleimport}>Already have a wallet?</Text>
-
-        <TouchableOpacity style={styles.optionContainer}>
-          <MaterialCommunityIcons name="file-document" size={24} color="#000" style={styles.optionIcon} />
-          <View style={styles.textContainer}>
-
-
-            <TouchableOpacity onPress={openBottomSheetchk} style={styles.optionText}>
-              <Text style={styles.createText}>Restore with recovery phrase</Text>
-            </TouchableOpacity>
-
-            <Text style={styles.optionDescription}>
-              Restore full access to your existing wallet using a secret recovery phrase.
-            </Text>
-          </View>
-        </TouchableOpacity>
-
-        <View style={styles.divider} />
-
-        <TouchableOpacity style={styles.optionContainer}>
-          <MaterialCommunityIcons name="eye" size={24} color="#000" style={styles.optionIcon} />
-          <View style={styles.textContainer}>
-            <Text style={styles.optionText}>Import a watch-only account</Text>
-            <Text style={styles.optionDescription}>
-              Watch-only accounts have limited functionality.
-            </Text>
-          </View>
-        </TouchableOpacity>
-      </RBSheet>
-
-      <RBSheet
-        ref={bottomSheetRe}
-        closeOnDragDown={true}
-        closeOnPressMask={true}
-        height={840}
-        customStyles={{
-          container: {
-            borderTopLeftRadius: 20,
-            borderTopRightRadius: 20,
-            padding: 20,
-          },
-        }}
-      >
-        <ScrollView contentContainerStyle={styles.container}>
-
-          <View style={styles.closeButtonContainer}>
-            <TouchableOpacity onPress={() => bottomSheetRe.current.close()} style={styles.closeButton}>
-              <MaterialCommunityIcons name="close" size={24} color="#000" />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={handleRestoreWallet}>
-              <Text
-                style={styles.restoreText}>RESTORE</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.recovtitleContainer}>
-            <Text style={styles.recovtitle}>Enter your</Text>
-            <Text style={styles.recovtitle}>recovery phrase</Text>
-          </View>
-
-          <View style={styles.inputContainer}>
-            {Array.from({ length: 12 }).map((_, index) => (
-              <View style={styles.inputBox} key={index}>
-                <TextInput
-                  style={styles.inputField}
-                  value={recoveryPhrase[index]}
-                  onChangeText={(text) => handleInputChange(index, text)}
-                  placeholder={`Word ${index + 1}`}
-                  placeholderTextColor="#aaa"
-                  maxLength={12}
-                />
-              </View>
-            ))}
-
-          </View>
-        </ScrollView>
       </RBSheet>
 
     </ScrollView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    paddingHorizontal: wp('4%'),
+    backgroundColor: 'white',
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight || hp('5%') : hp('5%'),
+    paddingBottom: hp('3%'),
+  },
+  flatListSpacing: {
+    paddingBottom: hp('1%'),
+  },
+  card: {
+    width: wp('70%'),
+    height: hp('20%'),
+    borderRadius: wp('4%'),
+    padding: wp('4%'),
+    marginRight: wp('4%'),
+    justifyContent: 'space-between',
+  },
+  addCard: {
+    borderWidth: 1,
+    borderColor: '#00C2AA',
+    backgroundColor: '#fff',
+  },
+  accountLabel: {
+    color: '#fff',
+    fontSize: wp('4%'),
+    fontWeight: '600',
+  },
+  address: {
+    top: wp("7%"),
+    color: '#fff',
+    fontSize: wp('3.5%'),
+  },
+  balance: {
+    fontSize: wp('6.5%'),
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  ethText: {
+    color: '#fff',
+    fontSize: wp('3.4%'),
+  },
+  iconRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: hp('1%'),
+  },
+  icon: {
+    marginLeft: wp('3%'),
+  },
+  tipText: {
+    textAlign: 'center',
+    fontWeight: '500',
+    color: 'gray',
+    marginVertical: hp('1.5%'),
+  },
+  actionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: hp('2%'),
+  },
+  actionCard: {
+    width: wp('44%'),
+    borderWidth: 1,
+    borderColor: '#eee',
+    borderRadius: wp('3%'),
+    padding: wp('3%'),
+    alignItems: 'center',
+    backgroundColor: 'white',
+  },
+  actionText: {
+    fontWeight: '600',
+    marginTop: hp('1%'),
+    fontSize: wp('4%'),
+  },
+  subText: {
+    fontSize: wp('3%'),
+    color: 'gray',
+    marginTop: hp('0.5%'),
+    textAlign: 'center',
+  },
+  warningCard: {
+    backgroundColor: '#fff',
+    padding: wp('4%'),
+    borderRadius: wp('3%'),
+    borderWidth: 0.6,
+    borderColor: '#ccc',
+  },
+  warningText: {
+    color: '#000',
+    fontWeight: '500',
+    marginBottom: hp('0.5%'),
+  },
+  warningDesc: {
+    color: '#ccc',
+    marginBottom: hp('1.5%'),
+  },
+  backupButton: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: wp('-1%'),
+    paddingVertical: hp('1%'),
+    borderRadius: wp('2%'),
+    alignSelf: 'flex-start',
+  },
+  backupText: {
+    color: '#00C2AA',
+    fontWeight: '600',
+    justifyContent: "flex-start",
+    alignSelf: 'flex-start',
+  },
+  addTitle: {
+    fontSize: wp('5%'),
+    fontWeight: '700',
+    color: '#00C2AA',
+  },
+  addSub: {
+    fontSize: wp('3.4%'),
+    color: 'gray',
+    marginVertical: hp('1%'),
+  },
+  addBtn: {
+    flexDirection: 'row',
+    backgroundColor: '#00C2AA',
+    paddingVertical: hp('1.2%'),
+    justifyContent: 'center',
+    borderRadius: wp('2%'),
+    marginBottom: hp('1.5%'),
+  },
+  addBtnText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: wp('3.8%'),
+    marginLeft: wp('2%'),
+  },
+  sectionContainer: {
+    marginTop: 20,
+    paddingHorizontal: wp('4%'),
+  },
+  sectionHeading: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000',
+    marginBottom: 10,
+  },
+  sectionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  sectionIcon: {
+    marginRight: 15,
+    height: wp("4.4%"),
+    width: wp("5%"),
+  },
+  sectionText: {
+    fontSize: 16,
+    color: '#000',
+  },
+  supportCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 10,
+    padding: 15,
+    marginTop: 20,
+    marginHorizontal: 0, // remove previous horizontal margin
+    paddingHorizontal: wp('4%'), // add horizontal padding to match
+  },
+  supportImage: {
+    width: 60,
+    height: 60,
+    resizeMode: 'contain',
+    marginRight: 15,
+  },
+  supportTextContainer: {
+    flex: 1,
+  },
+  supportTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#000',
+  },
+  supportSubtitle: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 4,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    paddingHorizontal: 1,
+    paddingTop: 20,
+  },
+  networkButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+  },
+  networkIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 8,
+  },
+  networkText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#000',
+  },
+  chevronIcon: {
+    marginLeft: 5,
+  },
+  iconCircle: {
+    borderRadius: 25,
+    padding: 10,
+  },
+  dropdown: {
+    backgroundColor: 'white',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    marginTop: 1,
+    width: 200,
+    position: 'absolute',
+    zIndex: 999,
+    top: 45,
+  },
+  dropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+  },
+  dropdownItemImage: {
+    width: 24,
+    height: 24,
+    marginRight: 10,
+  },
+  dropdownItemText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#000',
+  },
+  dropdownItemSubText: {
+    fontSize: 11,
+    color: '#666',
+  },
+  balanceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  descriptionback: {
+    color: '#444',
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  backupButtonback: {
+    marginTop: 20,
+    backgroundColor: '#00C2AA',
+    paddingVertical: 12,
+    paddingHorizontal: 25,
+    borderRadius: 6,
+  },
+  backupButtonTextback: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  contentback: {
+    alignItems: 'flex-start',
+    width: '100%',
+  },
+  headingback: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginTop: 20,
+    marginBottom: 12,
+    color: '#000',
+    textAlign: 'left',
+  },
+  descriptionback: {
+    color: '#444',
+    fontSize: 14,
+    textAlign: 'left',
+    marginBottom: 10,
+    width: '100%',
+  },
+  sheetContainercode: {
+    alignItems: "flex-start",
+    width: '100%',
+  },
+  headerTextcode: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    alignItems: "flex-start",
+    marginBottom: 5,
+    color: '#000',
+  },
+  subTextcode: {
+    fontSize: 14,
+    color: '#666',
+    alignItems: "flex-start",
+    marginBottom: 15,
+  },
+  recoveryBoxcode: {
+    flexDirection: 'row',
+    borderWidth: 1,
+    borderColor: '#000',
+    borderRadius: 8,
+    padding: 15,
+    width: '100%',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  columncode: {
+    flex: 1,
+  },
+  wordTextcode: {
+    fontSize: 16,
+    color: '#000',
+    marginBottom: 8,
+  },
+  backupButtoncode: {
+    backgroundColor: '#00C2AA',
+    paddingVertical: 12,
+    paddingHorizontal: 25,
+    borderRadius: 6,
+  },
+  backupButtonTextcode: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  titlefinish: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginTop: 60,
+    alignItems: "flex-start",
+    color: '#000',
+  },
+  descriptionfinish: {
+    alignItems: "flex-start",
+    marginTop: 15,
+    fontSize: 14,
+    color: '#555',
+    paddingHorizontal: 10,
+  },
+  doneButtonfinish: {
+    marginTop: 30,
+    backgroundColor: '#00C2AA',
+    paddingVertical: 12,
+    paddingHorizontal: 35,
+    borderRadius: 8,
+  },
+  doneButtonTextfinish: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  sheetTitleaccount: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#000',
+    alignSelf: 'flex-start',
+  },
+  sheetLabelaccount: {
+    fontSize: 16,
+    alignSelf: 'flex-start',
+    marginBottom: 5,
+    color: '#333',
+  },
+  inputaccount: {
+    width: '100%',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 20,
+    color: '#000',
+  },
+  addButtonaccount: {
+    width: '100%',
+    paddingVertical: 12,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  addButtonTextaccount: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  supportImagee: {
+    width: 30,
+    height: 30,
+    resizeMode: 'contain',
+    marginRight: 15,
+    },
+
+});
 
 export default NewWalletScreen;

@@ -5,6 +5,8 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import Earn from './BottomTab/EarnTab/Earn';
 import Swap from './BottomTab/SwapTab/Swap';
 import WalletTabScreen from './BottomTab/WalletTab/WalletTabScreen';
+import BrowserScreen from './BottomTab/BrowserTab/BrowserScreen';
+import MarketsScreen from './BottomTab/MarketTab/MarketsScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -59,10 +61,10 @@ function MainTabs() {
       })}
     >
       <Tab.Screen name="Wallet" component={WalletTabScreen} />
-      <Tab.Screen name="Market" component={Earn} />
+      <Tab.Screen name="Market" component={MarketsScreen} />
       <Tab.Screen name="Swap" component={Swap} />
-      <Tab.Screen name="Earn" component={Swap} />
-      <Tab.Screen name="Browser" component={Swap} />
+      <Tab.Screen name="Earn" component={Earn} />
+      <Tab.Screen name="Browser" component={BrowserScreen} />
     </Tab.Navigator>
   );
 }

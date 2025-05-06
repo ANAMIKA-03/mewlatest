@@ -1,65 +1,77 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image, Platform } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import {
+  View,
+  Text,
+  StyleSheet,
+  StatusBar,
+  ScrollView,
+  Image
+} from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 
 const Swap = () => {
   return (
     <View style={styles.container}>
+      <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
+
+      {/* Top bar */}
+      <View style={styles.networkRow}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Icon name="checkbox-blank-circle" size={10} color="#00C2AA" />
+          <Text style={styles.networkText}> ETHEREUM </Text>
+          <Icon name="chevron-down" size={20} />
+        </View>
+        <View style={styles.iconsRow}>
+          <Icon name="bell-outline" size={24} color="#000" style={{ marginRight: wp('4%') }} />
+          <Icon name="cart-outline" size={24} color="#000" />
+        </View>
+      </View>
+
       <Text style={styles.title}>Swap</Text>
 
-      <TouchableOpacity style={styles.card}>
-        <View style={styles.cardRow}>
-          {/* <Image source={require('./assets/chkk.png')} style={styles.icon} /> */}
-          <Icon name="refresh" size={30} style={styles.icon} color="#4caf50" />
-          <View style={styles.cardText}>
-            <Text style={styles.cardTitle}>Swap tokens</Text>
-            <Text style={styles.cardDescription}>
-              MEW finds the best price for you across multiple DEXs
-            </Text>
+      <ScrollView contentContainerStyle={{ paddingBottom: hp('4%') }}>
+        <View style={styles.cardLarge}>
+          <View style={styles.rowStart}>
+            <Icon name="swap-horizontal" size={30} color="#00C2AA" style={styles.cardIcon} />
+            <View style={styles.textWrap}>
+              <Text style={styles.cardTitle}>Swap tokens</Text>
+              <Text style={styles.cardDesc}>MEW finds the best price for you across multiple DEXs</Text>
+            </View>
           </View>
         </View>
-        
-      </TouchableOpacity>
 
-      <TouchableOpacity style={styles.card}>
-        <View style={styles.cardRow}>
-          {/* <Image source={require('./assets/chkk.png')} style={styles.icon} /> */}
-          <Icon name="credit-card" size={30} color="#4caf50" style={styles.icon}/> 
-          <View style={styles.cardText}>
-            <Text style={styles.cardTitle}>Buy Crypto</Text>
-            <Text style={styles.cardDescription}>
-              Buy ETH with major cards or your bank account
-            </Text>
+        <View style={styles.cardLarge}>
+          <View style={styles.rowStart}>
+            <Icon name="credit-card-outline" size={30} color="#00C2AA" style={styles.cardIcon} />
+            <View style={styles.textWrap}>
+              <Text style={styles.cardTitle}>Buy Crypto</Text>
+              <Text style={styles.cardDesc}>Buy ETH with major cards or your bank account</Text>
+              <View style={styles.paymentIconsRow}>
+                {/* <Image source={require('../../../assets/home/Assetbookh.png')} style={styles.paymentIcon} /> */}
+                {/* <Image source={require('../../../assets/home.Assetbookh.png')} style={styles.paymentIcon} /> */}
+                {/* <Image source={require('../../../assets/home/Assetbookh.png')} style={styles.paymentIcon} /> */}
+                {/* <Image source={require('../../../assets/home/Assetbookh.png')} style={styles.paymentIcon} /> */}
+              </View>
+            </View>
+          </View>
+          
+        </View>
+
+        <View style={styles.rowBetween}>
+          <View style={styles.cardSmall}>
+            <Icon name="cash-refund" size={28} color="#00C2AA" style={styles.cardIcon} />
+            <Text style={styles.cardTitle}>Sell crypto</Text>
+            <Text style={styles.cardDesc}>Withdraw to your bank account</Text>
+          </View>
+
+          <View style={styles.cardSmall}>
+            <Icon name="bridge" size={28} color="#00C2AA" style={styles.cardIcon} />
+            <Text style={styles.cardTitle}>Bridge assets</Text>
+            <Text style={styles.cardDesc}>Move tokens between chains</Text>
           </View>
         </View>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.card}>
-        <View style={styles.cardRow}>
-          {/* <Image source={require('../../assets/chkk.png')} style={styles.icon} /> */}
-          <View style={styles.cardText}>
-            <Text style={styles.cardTitle}>Win $100K With NG</Text>
-            <Text style={styles.cardDescription}>
-            grab your free lottery ticket on Namogmes now!
-            </Text>
-          </View>
-        </View>
-      </TouchableOpacity>
-
-      <View style={styles.rowContainer}>
-        <TouchableOpacity style={styles.cardSmall}>
-        {/* <Image source={require('./assets/chkk.png')} style={styles.imageicons} /> */}
-        <Icon name="attach-money" size={30} color="#4caf50" style={styles.icon} /> 
-          <Text style={styles.cardTitle}>Sell crypto</Text>
-          <Text style={styles.cardDescription}>Withdraw to your bank account</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.cardSmall}>
-        {/* <Image source={require('./assets/chkk.png')} style={styles.imageicons} /> */}
-        <Icon name="sync-alt" size={30} color="#4caf50" style={styles.icon} />
-          <Text style={styles.cardTitle}>Bridge assets</Text>
-          <Text style={styles.cardDescription}>Move tokens between chains</Text>
-        </TouchableOpacity>
-      </View>
+      </ScrollView>
     </View>
   );
 };
@@ -67,74 +79,77 @@ const Swap = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 30,
-    backgroundColor: '#fff',
+    paddingTop: hp('6%'),
+    backgroundColor: '#f9f9f9',
+    paddingHorizontal: wp('4%')
   },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 20,
-    marginBottom: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+  networkRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: hp('2%'),
   },
-  title: {
-    backgroundColor: '#fff',
-    marginBottom: 15,
-    fontWeight:"bold",
-    fontSize: 21,
+  networkText: {
+    fontSize: wp('3.8%'),
+    fontWeight: '600',
+    marginLeft: wp('2%'),
   },
-  cardRow: {
+  iconsRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  icon: {
-    width: 30,
-    height: 30,
-    marginRight: 15,
-    resizeMode: 'contain',
+  title: {
+    fontSize: wp('6%'),
+    fontWeight: 'bold',
+    marginBottom: hp('2%'),
   },
-  imageicons: {
-    width: 30,
-    height: 30,
-    marginRight: 15,
-    resizeMode: 'contain',
-    paddingTop: 3,
-    paddingBottom:4,
+  rowStart: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
   },
-  cardText: {
+  rowBetween: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: hp('2%')
+  },
+  cardLarge: {
+    backgroundColor: 'white',
+    borderRadius: wp('3%'),
+    padding: wp('4%'),
+    marginBottom: hp('2%'),
+  },
+  cardSmall: {
+    backgroundColor: 'white',
+    borderRadius: wp('3%'),
+    width: '48%',
+    padding: wp('4%'),
+  },
+  cardIcon: {
+    marginRight: wp('4%')
+  },
+  textWrap: {
     flex: 1,
   },
   cardTitle: {
-    fontSize: 18,
+    fontSize: wp('4.2%'),
     fontWeight: 'bold',
-    color: '#333',
+    marginBottom: hp('0.5%'),
   },
-  cardDescription: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 5,
+  cardDesc: {
+    color: '#444',
+    fontSize: wp('3.5%'),
   },
-  rowContainer: {
+  paymentIconsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    marginTop: hp('1%')
   },
-  cardSmall: {
-    flex: 1,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 20,
-    marginBottom: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    marginRight: 10,
+  paymentIcon: {
+    width: wp('8%'),
+    height: wp('5%'),
+    resizeMode: 'contain',
+    marginRight: wp('2%')
   },
 });
 
 export default Swap;
+

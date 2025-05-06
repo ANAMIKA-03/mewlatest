@@ -305,7 +305,7 @@ const WalletTabScreen = () => {
     setProvider(networks[networkindex]?.rpcUrl); // changing rpc in app
     setDropdownVisible(false);
   };
-  console.log(wallet?.address, isZeroAddress(), ' adsfgsdfgasdfg')
+  // console.log(wallet?.address, isZeroAddress(), ' adsfgsdfgasdfg')
   if (!isZeroAddress()) {
     console.log('new wallet')
     return <NewWalletScreen />
@@ -342,13 +342,6 @@ const WalletTabScreen = () => {
 
 
         </View>
-
-        {/* <TouchableOpacity style={styles.iconCircle}
-              onPress={openBottomSheetone}
-            >
-              <MaterialCommunityIcons name="gas-station-outline" size={20} color={'#000'} />
-            </TouchableOpacity> */}
-
         <TouchableOpacity style={styles.iconCircle}
           onPress={() => scannerRef.current.open()}
         >

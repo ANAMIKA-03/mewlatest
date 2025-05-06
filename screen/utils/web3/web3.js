@@ -31,7 +31,6 @@ export const validateMnemonic = (mnemonic) => {
 };
 
 
-
 export const getHDWallet = (index, mnemonic) => {
   try {
     console.log("Wallet creation started...");
@@ -53,9 +52,6 @@ export const getHDWallet = (index, mnemonic) => {
   }
 };
 
-
-
-
 export const importWallet = (mnemonic) => {
   try {
     const node = HDNode.fromMnemonic(mnemonic, null, wordlists.en);
@@ -72,7 +68,6 @@ export const importWallet = (mnemonic) => {
     console.log('Wallet Import Error:', error);
   }
 };
-
 
 export const setDefaultAccount = (privateKey) => {
   // console.log(privateKey, ' privatekey');
