@@ -2,10 +2,10 @@ import Web3 from "web3";
 import * as bip39 from "bip39";
 import { ethers } from "ethers";
 import {
-    networks,
-    all_chains_txns,
-    AllChainIds
-  } from "../walletConstants";
+  networks,
+  all_chains_txns,
+  AllChainIds
+} from "../walletConstants";
 import { ERC20ABI } from "../ABI";
 import 'react-native-crypto';
 import { Wallet } from 'ethers';
@@ -34,8 +34,15 @@ export const validateMnemonic = (mnemonic) => {
 export const getHDWallet = (index, mnemonic) => {
   try {
     console.log("Wallet creation started...");
-    const wallet = Wallet.createRandom(); 
-    console.log(wallet.address, wallet.privateKey, wallet.mnemonic.phrase); 
+    let wallet;
+    if (index == 0) {
+      wallet = Wallet.createRandom();
+    } else {
+      
+      const derivationPath = `m/44'/60'/0'/0/${index}`;
+      wallet = Wallet.fromMnemonic(mnemonic, derivationPath);
+    }
+    console.log(wallet.address, wallet.privateKey, wallet.mnemonic.phrase);
     console.log("Wallet created...");
     console.log("Created Wallet Address:", wallet.address);
 
@@ -45,7 +52,7 @@ export const getHDWallet = (index, mnemonic) => {
       seedPhrase: wallet.mnemonic.phrase,
       derivationPath: wallet.mnemonic.path,
     };
-   return result;
+    return result;
   } catch (error) {
     console.error('getHDWallet error:', error);
     return null;
@@ -58,7 +65,7 @@ export const importWallet = (mnemonic) => {
     const address = node.address;
     const publicKey = node.publicKey;
     const privateKey = node.privateKey;
-
+    console.log({node})
     return {
       address,
       publicKey,
@@ -68,6 +75,7 @@ export const importWallet = (mnemonic) => {
     console.log('Wallet Import Error:', error);
   }
 };
+
 
 export const setDefaultAccount = (privateKey) => {
   // console.log(privateKey, ' privatekey');

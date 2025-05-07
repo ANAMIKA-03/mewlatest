@@ -20,19 +20,19 @@ const categories = [
   {
     title: 'DeFi',
     color: '#C8F4EC',
-    icons: ['defi1', 'defi2', 'defi3', 'defi4', 'defi5'],
+    // icons: ['defi1', 'defi2', 'defi3', 'defi4', 'defi5'],
     more: '+7'
   },
   {
     title: 'NFTs',
     color: '#E5CBFB',
-    icons: ['nft1', 'nft2', 'nft3', 'nft4', 'nft5'],
+    // icons: ['nft1', 'nft2', 'nft3', 'nft4', 'nft5'],
     more: '+7'
   },
   {
     title: 'USD stable coins',
     color: '#EEE0C9',
-    icons: ['usd1', 'usd2', 'usd3', 'usd4', 'usd5'],
+    // icons: ['usd1', 'usd2', 'usd3', 'usd4', 'usd5'],
     more: '+5'
   }
 ];
@@ -119,13 +119,13 @@ const MarketsScreen = () => {
           <View key={idx} style={[styles.categoryCard, { backgroundColor: cat.color }]}>
             <Text style={styles.categoryText}>{cat.title}</Text>
             <View style={styles.categoryTopRow}>
-              {cat.icons.map((icon, iconIdx) => (
+              {/* {cat.icons.map((icon, iconIdx) => (
                 <Image
                   key={iconIdx}
                   source={{ uri: 'https://via.placeholder.com/30' }}
                   style={styles.categoryIcon}
                 />
-              ))}
+              ))} */}
               <Text style={styles.moreText}>{cat.more}</Text>
             </View>
           </View>

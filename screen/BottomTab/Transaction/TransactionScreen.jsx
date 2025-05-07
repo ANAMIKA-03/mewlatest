@@ -28,6 +28,14 @@ const tokens = [
   { symbol: 'USDT', price: '$1.00', marketCap: '$0', change: '-0.12%', color: 'red', icon: require('../../../assets/chainicons/bnb.png') },
 ];
 
+const actionImages = {
+  Deposit: require('../../../assets/home/receive.png'),
+  Buy: require('../../../assets/home/buy.png'),
+  Send: require('../../../assets/home/solo.png'),
+  Sell: require('../../../assets/home/swap.png'),
+  Default: require('../../../assets/home/swap.png'),
+};
+
 
 const TransactionScreen = () => {
   const [activeTab, setActiveTab] = useState('Assets');
@@ -139,17 +147,17 @@ const TransactionScreen = () => {
             onPress={() => {
               if (['Deposit'].includes(action)) {
                 refRBSheet.current.open();
-              } else if (['Buy'].includes(action)){
-                refRBSheetopen.current.open(); 
-                 }
-                else if(['Send'].includes(action)){
-                  refRBSheetsend.current.open();
-                }
+              } else if (['Buy'].includes(action)) {
+                refRBSheetopen.current.open();
+              }
+              else if (['Send'].includes(action)) {
+                refRBSheetsend.current.open();
+              }
               else {
                 console.log(`${action} pressed`);
               }
             }}>
-            <Icon
+            {/* <Icon
               name={
                 action === 'Deposit'
                   ? 'arrow-down-bold-circle-outline'
@@ -161,7 +169,13 @@ const TransactionScreen = () => {
               }
               size={wp('6.5%')}
               color="#00C2AA"
+            /> */}
+
+            <Image
+              source={actionImages[action] || actionImages['Default']}
+              style={styles.supportImagee}
             />
+
             <Text style={styles.actionLabel}>{action}</Text>
           </TouchableOpacity>
         ))}
@@ -656,7 +670,13 @@ const styles = StyleSheet.create({
   buyButtonTextsend: {
     color: 'white',
     fontWeight: 'bold'
-  }
+  },
+  supportImagee: {
+    width: 30,
+    height: 30,
+    resizeMode: 'contain',
+    marginRight: 15,
+  },
 });
 
 export default TransactionScreen;

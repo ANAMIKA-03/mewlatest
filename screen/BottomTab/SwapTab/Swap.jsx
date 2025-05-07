@@ -33,7 +33,8 @@ const Swap = () => {
       <ScrollView contentContainerStyle={{ paddingBottom: hp('4%') }}>
         <View style={styles.cardLarge}>
           <View style={styles.rowStart}>
-            <Icon name="swap-horizontal" size={30} color="#00C2AA" style={styles.cardIcon} />
+            <Image source={require('../../../assets/home/swap.png')}
+              style={styles.supportImagee} />
             <View style={styles.textWrap}>
               <Text style={styles.cardTitle}>Swap tokens</Text>
               <Text style={styles.cardDesc}>MEW finds the best price for you across multiple DEXs</Text>
@@ -43,7 +44,10 @@ const Swap = () => {
 
         <View style={styles.cardLarge}>
           <View style={styles.rowStart}>
-            <Icon name="credit-card-outline" size={30} color="#00C2AA" style={styles.cardIcon} />
+            {/* <Icon name="credit-card-outline" size={30} color="#00C2AA" style={styles.cardIcon} /> */}
+            <Image source={require('../../../assets/home/buy.png')}
+              style={styles.supportImagee} />
+
             <View style={styles.textWrap}>
               <Text style={styles.cardTitle}>Buy Crypto</Text>
               <Text style={styles.cardDesc}>Buy ETH with major cards or your bank account</Text>
@@ -55,18 +59,22 @@ const Swap = () => {
               </View>
             </View>
           </View>
-          
+
         </View>
 
         <View style={styles.rowBetween}>
           <View style={styles.cardSmall}>
-            <Icon name="cash-refund" size={28} color="#00C2AA" style={styles.cardIcon} />
+            {/* <Icon name="cash-refund" size={28} color="#00C2AA" style={styles.cardIcon} /> */}
+            <Image source={require('../../../assets/home/sell.png')}
+              style={styles.supportImagee} />
+
             <Text style={styles.cardTitle}>Sell crypto</Text>
             <Text style={styles.cardDesc}>Withdraw to your bank account</Text>
           </View>
 
           <View style={styles.cardSmall}>
-            <Icon name="bridge" size={28} color="#00C2AA" style={styles.cardIcon} />
+          <Image source={require('../../../assets/home/bridge.png')}
+              style={styles.supportImagee} />
             <Text style={styles.cardTitle}>Bridge assets</Text>
             <Text style={styles.cardDesc}>Move tokens between chains</Text>
           </View>
@@ -148,6 +156,12 @@ const styles = StyleSheet.create({
     height: wp('5%'),
     resizeMode: 'contain',
     marginRight: wp('2%')
+  },
+  supportImagee: {
+    width: 30,
+    height: 30,
+    resizeMode: 'contain',
+    marginRight: 15,
   },
 });
 

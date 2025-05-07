@@ -18,32 +18,15 @@ import {
   heightPercentageToDP as hp,
 } from 'react-native-responsive-screen';
 import { useDispatch, useSelector } from 'react-redux';
-import { setActiveNetwork } from '../../redux/walletSlice';
-import { setProvider } from '../../utils/web3/web3';
+import { addWallet, createWallet, setActiveNetwork, setActiveWallet, setAddress, setInitialised, setMnemonic, setPrivateKey } from '../../redux/walletSlice';
+import { getHDWallet, setDefaultAccount, setProvider } from '../../utils/web3/web3';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
 import RBSheet from 'react-native-raw-bottom-sheet';
+import { all_chains_txns, AllChainIds, WalletAssets } from '../../utils/walletConstants';
 
 
 const NewWalletScreen = () => {
-  const { networks, activeNetwork } = useSelector(state => state.wallet)
-  const [dropdownVisible, setDropdownVisible] = useState(false);
-  const [isBackedUp, setIsBackedUp] = useState(false);
-  const refAddAccountSheet = useRef();
-  const [nickname, setNickname] = useState('');
-  const [cards, setCards] = useState([
-    { type: 'wallet', gradient: ['#b5de2e', '#c7f526', '#c1ff5a'], address: '0xE38B...5Db5' },
-    { type: 'addAccount' }
-  ]);
-
-  const refRBSheet = useRef();
-  const refRBSheetword = useRef();
-  const refRBSheetwordfinish = useRef();
-
-
-  const dispatch = useDispatch();
-  const navigation = useNavigation();
-
   const gradientPool = [
     ['#b5de2e', '#c7f526', '#c1ff5a'],
     ['#ff9a9e', '#fad0c4', '#fad0c4'],
@@ -53,14 +36,74 @@ const NewWalletScreen = () => {
     ['#a6c0fe', '#f68084', '#f68084'],
     ['#fccb90', '#d57eeb', '#d57eeb'],
   ];
+  
+  const { networks, activeNetwork, wallets, activeWallet, mnemonic } = useSelector(state => state.wallet)
+  const [dropdownVisible, setDropdownVisible] = useState(false);
+  const [isBackedUp, setIsBackedUp] = useState(false);
+  const refAddAccountSheet = useRef();
+  const [nickname, setNickname] = useState('');
+  const [loading, setLoading] = useState(false);
+  const cards = [...wallets.map(wallet => ({
+    type: 'wallet',
+    gradient: gradientPool[Math.floor(Math.random() * gradientPool.length)],
+    address: wallet.address,
+  })), { type: 'addAccount' }];
+  const wallet = wallets[activeWallet];
+  const refRBSheet = useRef();
+  const refRBSheetword = useRef();
+  const refRBSheetwordfinish = useRef();
+  const HDWallet = getHDWallet(wallets?.length + 1, mnemonic);
+
+
+
+
+
+  const dispatch = useDispatch();
+  const navigation = useNavigation();
+
+  const addNewWallet = async (data) => {
+    try {
+      setLoading(true);
+      const HDWallet = getHDWallet(wallets?.length + 1, mnemonic);
+      // let mnemonic = HDWallet?.seedPhrase;
+      console.log("HDWallet:", HDWallet, mnemonic);
+      const warr = [...wallets];
+      const nw = {
+        index: wallets?.length - 1,
+        address: HDWallet?.address,
+        privateKey: HDWallet?.privateKey,
+        name: 'Wallet' + (wallets?.length + 1),
+        networks: AllChainIds,
+        assets: WalletAssets,
+        seed: mnemonic,
+        transactions: all_chains_txns,
+      };
+      warr.push(nw);
+      dispatch(setAddress(HDWallet?.address));
+      setDefaultAccount(HDWallet?.privateKey);
+      dispatch(setPrivateKey(HDWallet?.privateKey));
+      dispatch(setMnemonic(mnemonic));
+      dispatch(addWallet([...warr]));
+      dispatch(setActiveWallet(wallets?.length - 1));
+      setLoading(false);
+      return HDWallet;
+    } catch (e) {
+      setLoading(false);
+      return false;
+    }
+  };
+
+ 
 
   const addNewWalletCard = () => {
+    addNewWallet();
+
     const newGradient = gradientPool[Math.floor(Math.random() * gradientPool.length)];
     const newAddress = '0x' + Math.random().toString(16).substr(2, 8) + '...' + Math.random().toString(16).substr(2, 4);
-    const newCard = { type: 'wallet', gradient: newGradient, address: newAddress };
+    const newCard = { type: 'wallet', gradient: newGradient, address: HDWallet?.address };
 
     const updatedCards = [...cards.filter(c => c.type !== 'addAccount'), newCard, { type: 'addAccount' }];
-    setCards(updatedCards);
+    // setCards(updatedCards);
   };
 
   const renderCard = (item) => {
@@ -71,7 +114,11 @@ const NewWalletScreen = () => {
           style={styles.card}
         >
           <Text style={styles.accountLabel}>My main account</Text>
-          <Text style={styles.address}>0xE38B...5Db5</Text>
+          <Text style={styles.address}>
+            {item?.address
+              ? `${item.address.slice(0, 6)}...${item.address.slice(-4)}`
+              : 'Address not found'}
+          </Text>
           <View style={styles.balanceRow}>
             <Text style={styles.balance}>$0.00 </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Transaction')}>
@@ -92,7 +139,7 @@ const NewWalletScreen = () => {
           <Text style={styles.addSub}>Use accounts to manage your assets separately</Text>
           <TouchableOpacity
             style={styles.addBtn}
-            onPress={addNewWalletCard} // 👈 attach here
+            onPress={addNewWalletCard} // 👈 attach here            
           >
             <Icon name="plus" size={wp('4%')} color="white" />
             <Text style={styles.addBtnText}>ADD NEW ACCOUNT</Text>
@@ -118,7 +165,8 @@ const NewWalletScreen = () => {
     'jazz', 'stamp', 'lunar', 'magic', 'spoon', 'zebra'
   ];
 
-
+  
+  console.log({ wallets })
   return (
     <ScrollView
       contentContainerStyle={styles.container}
@@ -174,13 +222,13 @@ const NewWalletScreen = () => {
       <View style={styles.actionRow}>
         <TouchableOpacity style={styles.actionCard}>
           <Image source={require('../../../assets/home/receive.png')}
-          style={styles.supportImagee} />
+            style={styles.supportImagee} />
           <Text style={styles.actionText}>Receive</Text>
           <Text style={styles.subText}>From existing wallet</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.actionCard}>
           <Image source={require('../../../assets/home/buy.png')}
- style={styles.supportImagee} />
+            style={styles.supportImagee} />
           <Text style={styles.actionText}>Buy Crypto</Text>
           <Text style={styles.subText}>Visa or Mastercard</Text>
         </TouchableOpacity>
@@ -203,7 +251,6 @@ const NewWalletScreen = () => {
 
         </View>
       )}
-
       <View style={styles.sectionContainer}>
         <Text style={styles.sectionHeading}>Other things</Text>
 
@@ -402,7 +449,6 @@ const NewWalletScreen = () => {
           ]}
           disabled={!nickname}
           onPress={() => {
-            // You can save the nickname here
             refAddAccountSheet.current.close();
             setNickname('');
           }}
@@ -410,32 +456,6 @@ const NewWalletScreen = () => {
           <Text style={styles.addButtonTextaccount}>Add</Text>
         </TouchableOpacity>
       </RBSheet>
-
-
-      <RBSheet
-        ref={refRBSheet}
-        height={280}
-        openDuration={250}
-        customStyles={{
-          container: {
-            borderTopLeftRadius: 20,
-            borderTopRightRadius: 20,
-            padding: 20,
-            backgroundColor: 'white',
-            alignItems: 'center',
-          },
-        }}
-      >
-        <Text style={styles.title}>Your ETH balance is too low</Text>
-        <Text style={styles.description}>
-          Every transaction on Ethereum requires a gas fee, payable only in ETH. When your ETH balance is low, you won't be able to send or swap tokens until you add more ETH to your wallet. Purchase more ETH directly on the Swap tab.
-        </Text>
-
-        <TouchableOpacity style={styles.button}>
-          <Text style={styles.buttonText}>FUND MY ACCOUNT</Text>
-        </TouchableOpacity>
-      </RBSheet>
-
     </ScrollView>
   );
 };
@@ -444,7 +464,7 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: wp('4%'),
     backgroundColor: 'white',
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight || hp('5%') : hp('5%'),
+    paddingTop: hp('3%'),
     paddingBottom: hp('3%'),
   },
   flatListSpacing: {
@@ -469,7 +489,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   address: {
-    top: wp("7%"),
+    top: wp("1%"),
     color: '#fff',
     fontSize: wp('3.5%'),
   },
@@ -488,7 +508,7 @@ const styles = StyleSheet.create({
     marginTop: hp('1%'),
   },
   icon: {
-    marginLeft: wp('3%'),
+    marginLeft: wp('2%'),
   },
   tipText: {
     textAlign: 'center',
@@ -844,7 +864,7 @@ const styles = StyleSheet.create({
     height: 30,
     resizeMode: 'contain',
     marginRight: 15,
-    },
+  },
 
 });
 

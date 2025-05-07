@@ -95,7 +95,7 @@ const WalletTabScreen = () => {
       setLoading(true);
       const HDWallet = getHDWallet(0, mnemonic);
       let mnemonic = HDWallet?.seedPhrase;
-      // console.log("HDWallet:", HDWallet);      
+      console.log("HDWallet:", HDWallet,mnemonic);      
       dispatch(setAddress(HDWallet?.address));
       setDefaultAccount(HDWallet?.privateKey);
       dispatch(setPrivateKey(HDWallet?.privateKey));
@@ -124,23 +124,41 @@ const WalletTabScreen = () => {
 
   const handleRestoreWallet = () => {
     const mnemonic = recoveryPhrase.join(' ').trim();
-
+  
     if (mnemonic.split(' ').length !== 12) {
       console.error('Please enter all 12 words correctly');
       return;
     }
-
-    const restoredWallet = importWallet(mnemonic);
-
-    if (restoredWallet) {
-      dispatch(setAddress(restoredWallet.address));
-      dispatch(setPrivateKey(restoredWallet.privateKey));
-      console.log('Wallet restored:', restoredWallet);
+  
+    const HDWallet = importWallet(mnemonic);
+  
+    if (HDWallet) {
+      setLoading(true);
+      console.log("HDWallet:", HDWallet, mnemonic);      
+      dispatch(setAddress(HDWallet?.address));
+      setDefaultAccount(HDWallet?.privateKey);
+      dispatch(setPrivateKey(HDWallet?.privateKey));
+      dispatch(setMnemonic(mnemonic));
+      dispatch(
+        createWallet({
+          index: 0,
+          address: HDWallet?.address,
+          privateKey: HDWallet?.privateKey,
+          name: 'Wallet-1',
+          networks: AllChainIds,
+          assets: WalletAssets,
+          seed: mnemonic,
+          transactions: all_chains_txns,
+        })
+      );
+      dispatch(setActiveWallet(0));
+      dispatch(setInitialised(true));
+      setLoading(false);
     } else {
       console.error('Failed to restore the wallet');
     }
   };
-
+  
 
   const startProgressSteps = () => {
     progressSheetRef.current.open();
@@ -368,6 +386,7 @@ const WalletTabScreen = () => {
         <TouchableOpacity
           style={styles.importWalletButton}
           onPress={openBottomSheett}
+          // onPress={handleRestoreWallet}
         >
           <MaterialCommunityIcons name="wallet" size={18} color="#000" style={{ marginRight: 10 }} />
           <Text style={styles.importWalletText}>IMPORT EXISTING WALLET</Text>
