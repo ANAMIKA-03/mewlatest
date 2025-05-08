@@ -1,4 +1,3 @@
-
 import bnbIcon from '../../assets/chainicons/bnb.png';
 import ethIcon from '../../assets/chainicons/ethereumlogo.png';
 import polygonIcon from '../../assets/chainicons/polygon.png';
@@ -108,7 +107,7 @@ export const WalletAssets = [
     tokens: [],
     nfts: [],
     slug: 'bsc',
-    rpcUrl: 'https://bsc-dataseed.binance.org/',
+    rpcUrl: 'https://bsc.publicnode.com',
     blockExplorerUrl: 'https://bscscan.com',
     name: 'Binance Coin',
     symbol: 'BNB',
@@ -128,7 +127,7 @@ export const WalletAssets = [
     tokens: [],
     nfts: [],
     slug: 'eth',
-    rpcUrl: 'https://rpc.ankr.com/eth',
+    rpcUrl: "https://cloudflare-eth.com",
     blockExplorerUrl: 'https://etherscan.io',
     name: 'Ethereum Mainnet',
     symbol: 'ETH',
@@ -148,7 +147,7 @@ export const WalletAssets = [
       tokens: [],
       nfts: [],
       slug: 'polygon',
-      rpcUrl: 'https://polygon-rpc.com',
+      rpcUrl: "https://polygon.llamarpc.com",
       blockExplorerUrl: 'https://polygonscan.com',
       name: 'Polygon',
       symbol: 'MATIC',
@@ -168,7 +167,7 @@ export const WalletAssets = [
     tokens: [],
     nfts: [],
     slug: 'arbitrum',
-    rpcUrl: 'https://arb1.arbitrum.io/rpc',
+    rpcUrl: 'https://arbitrum.llamarpc.com',
     blockExplorerUrl: 'https://arbiscan.io',
     name: 'Arbitrum One',
     symbol: 'ARB',
@@ -188,7 +187,7 @@ export const WalletAssets = [
     tokens: [],
     nfts: [],
     slug: 'zksync',
-    rpcUrl: 'https://mainnet.era.zksync.io',
+    rpcUrl: 'https://zksync-era.blockpi.network/v1/rpc/public',
     blockExplorerUrl: 'https://explorer.zksync.io',
     name: 'zkSync Era',
     symbol: 'ETH',
@@ -208,7 +207,7 @@ export const WalletAssets = [
     tokens: [],
     nfts: [],
     slug: 'base',
-    rpcUrl: 'https://mainnet.base.org',
+    rpcUrl: 'https://base.llamarpc.com',
     blockExplorerUrl: 'https://basescan.org',
     name: 'Base',
     symbol: 'ETH',
@@ -228,7 +227,7 @@ export const WalletAssets = [
     tokens: [],
     nfts: [],
     slug: 'optimism',
-    rpcUrl: 'https://mainnet.optimism.io',
+    rpcUrl: 'https://optimism.publicnode.com',
     blockExplorerUrl: 'https://optimistic.etherscan.io',
     name: 'Optimism',
     symbol: 'ETH',
@@ -244,7 +243,6 @@ export const WalletAssets = [
   },
 ]
 
-
 export const all_chains_txns = {
   bsc: [],
   eth: [],
@@ -254,7 +252,6 @@ export const all_chains_txns = {
   base: [],
   optimum: [],
 };
-
 
 export const AllChainIds = ["0x38", "0x1", "0x89", "0xa4b1", '0x144', '0x2105', '0xa'];
 

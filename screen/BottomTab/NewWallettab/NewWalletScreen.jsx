@@ -36,7 +36,7 @@ const NewWalletScreen = () => {
     ['#a6c0fe', '#f68084', '#f68084'],
     ['#fccb90', '#d57eeb', '#d57eeb'],
   ];
-  
+
   const { networks, activeNetwork, wallets, activeWallet, mnemonic } = useSelector(state => state.wallet)
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [isBackedUp, setIsBackedUp] = useState(false);
@@ -53,11 +53,7 @@ const NewWalletScreen = () => {
   const refRBSheetword = useRef();
   const refRBSheetwordfinish = useRef();
   const HDWallet = getHDWallet(wallets?.length + 1, mnemonic);
-
-
-
-
-
+  const seed = wallets[activeWallet]?.seed;
   const dispatch = useDispatch();
   const navigation = useNavigation();
 
@@ -93,8 +89,6 @@ const NewWalletScreen = () => {
     }
   };
 
- 
-
   const addNewWalletCard = () => {
     addNewWallet();
 
@@ -103,7 +97,6 @@ const NewWalletScreen = () => {
     const newCard = { type: 'wallet', gradient: newGradient, address: HDWallet?.address };
 
     const updatedCards = [...cards.filter(c => c.type !== 'addAccount'), newCard, { type: 'addAccount' }];
-    // setCards(updatedCards);
   };
 
   const renderCard = (item) => {
@@ -160,13 +153,18 @@ const NewWalletScreen = () => {
     setDropdownVisible(!dropdownVisible);
   };
 
-  const recoveryWords = [
-    'obey', 'index', 'cable', 'light', 'echo', 'focus',
-    'jazz', 'stamp', 'lunar', 'magic', 'spoon', 'zebra'
-  ];
+  // const recoveryWords = [
+  //   'obey', 'index', 'cable', 'light', 'echo', 'focus',
+  //   'jazz', 'stamp', 'lunar', 'magic', 'spoon', 'zebra'
+  // ];
 
-  
+
   console.log({ wallets })
+
+  const recoveryWords = seed ? seed.split(' ') : [];
+
+
+
   return (
     <ScrollView
       contentContainerStyle={styles.container}
@@ -317,7 +315,6 @@ const NewWalletScreen = () => {
             size={300}
             color="#000"
           />
-          {/* <Text style={styles.headingback}>Back up your wallet</Text> */}
           <Text style={styles.headingback}>Back up your{"\n"}wallet</Text>
           <Text style={styles.descriptionback}>
             With MEW wallet you are your own bank. No one but you has access to your private key. Not even MEWforce.
@@ -347,8 +344,13 @@ const NewWalletScreen = () => {
         }}
       >
         <View style={styles.sheetContainercode}>
-          <Text style={styles.headerTextcode}>Here is your{"\n"}recovery phrase</Text>
-          <Text style={styles.subTextcode}>Write it down on paper.Resist temptation to email it to yourself or screenshot it.</Text>
+          <Text style={styles.headerTextcode}>
+            Here is your{"\n"}recovery phrase
+          </Text>
+          <Text style={styles.subTextcode}>
+            Write it down on paper. Resist temptation to email it to yourself or
+            screenshot it.
+          </Text>
 
           <View style={styles.recoveryBoxcode}>
             <View style={styles.columncode}>
@@ -358,6 +360,7 @@ const NewWalletScreen = () => {
                 </Text>
               ))}
             </View>
+
             <View style={styles.columncode}>
               {recoveryWords.slice(6, 12).map((word, index) => (
                 <Text key={index + 6} style={styles.wordTextcode}>
@@ -375,6 +378,7 @@ const NewWalletScreen = () => {
           </TouchableOpacity>
         </View>
       </RBSheet>
+
 
       <RBSheet
         ref={refRBSheetwordfinish}
@@ -410,13 +414,13 @@ const NewWalletScreen = () => {
               refRBSheetwordfinish.current.close();
               refRBSheetword.current.close();
               refRBSheet.current.close();
+              
             }}
           >
             <Text style={styles.doneButtonTextfinish}>DONE</Text>
           </TouchableOpacity>
         </View>
       </RBSheet>
-
 
       <RBSheet
         ref={refAddAccountSheet}

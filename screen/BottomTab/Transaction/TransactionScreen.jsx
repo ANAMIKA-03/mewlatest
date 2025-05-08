@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -16,7 +16,7 @@ import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-nat
 import { useDispatch, useSelector } from 'react-redux';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { setActiveNetwork } from '../../redux/walletSlice';
-import { setProvider } from '../../utils/web3/web3';
+import { getAllChainBalances, setProvider } from '../../utils/web3/web3';
 import RBSheet from 'react-native-raw-bottom-sheet';
 import QRCode from 'react-native-qrcode-svg';
 
@@ -40,33 +40,55 @@ const actionImages = {
 const TransactionScreen = () => {
   const [activeTab, setActiveTab] = useState('Assets');
   const { networks, activeNetwork } = useSelector(state => state.wallet)
+
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const dispatch = useDispatch();
   const navigation = useNavigation();
   const refRBSheet = useRef();
   const refRBSheetopen = useRef();
   const refRBSheetsend = useRef();
-
-  const address = "0xE38B...5Db5";
+  const { wallets, activeWallet } = useSelector(state => state.wallet);
+  const address = wallets[activeWallet]?.address;
+  const assets = wallets[activeWallet]?.assets;
+  const chainIcon = networks[activeNetwork]?.chainIcon
+  console.log("adddressasset", assets, chainIcon)
 
   const renderTabContent = () => {
     switch (activeTab) {
       case 'Assets':
         return (
-          <View style={styles.tokenRow}>
-            <Icon name="ethereum" size={wp('8%')} color="#000" />
-            <View style={{ marginLeft: wp('3%') }}>
-              <Text style={styles.tokenName}>Ethereum</Text>
-              <Text style={styles.tokenSubtitle}>0 ETH</Text>
-            </View>
-            <View style={styles.tokenRight}>
-              <Text style={styles.tokenGrowth}>+ 0.26%</Text>
-              <Text style={styles.tokenPrice}>$0\n@ $1819.88</Text>
-            </View>
+          <View>
+            {assets?.length > 0 ? (
+              assets.map((item, index) => {
+                const matchingNetwork = networks.find(net => net.slug === item.slug);
+                const chainIcon = matchingNetwork?.chainIcon;
+
+                return (
+                  <View key={index} style={[styles.tokenRow, { marginBottom: hp('2%') }]}>
+                    {chainIcon ? (
+                      <Image source={chainIcon} style={styles.chainIcon} />
+                    ) : (
+                      <Icon name="currency-usd-circle" size={wp('8%')} color="#00C2AA" />
+                    )}
+                    <View style={{ marginLeft: wp('3%') }}>
+                      <Text style={styles.tokenName}>{item.name}</Text>
+                      <Text style={styles.tokenSubtitle}>
+                        {item.balance ?? 0} {item.symbol}
+                      </Text>
+                    </View>
+                    <View style={styles.tokenRight}>
+                      <Text style={styles.tokenGrowth}>
+                        ≈ ${item.balance ? (item.balance * 1).toFixed(2) : '0.00'}
+                      </Text>
+                    </View>
+                  </View>
+                );
+              })
+            ) : (
+              <Text style={styles.emptyMsg}>No assets available</Text>
+            )}
           </View>
         );
-      case 'NFTs':
-        return <Text style={styles.emptyMsg}>Your NFTs will be shown here.</Text>;
       case 'Transactions':
         return <Text style={styles.emptyMsg}>Account transactions will be displayed here</Text>;
     }
@@ -81,6 +103,12 @@ const TransactionScreen = () => {
   const toggleDropdown = () => {
     setDropdownVisible(!dropdownVisible);
   };
+
+  useEffect(() => {
+    getAllChainBalances(address)
+      .then(console.log)
+      .catch(error => console.error('Error fetching balances:', error));
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -133,7 +161,10 @@ const TransactionScreen = () => {
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <Text style={styles.title}>My main account</Text>
           </View>
-          <Text style={styles.subtitle}>0xE38B...5Db5</Text>
+          <Text style={styles.subtitle}>
+            {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : ''}
+          </Text>
+
         </View>
       </View>
 
@@ -148,29 +179,18 @@ const TransactionScreen = () => {
               if (['Deposit'].includes(action)) {
                 refRBSheet.current.open();
               } else if (['Buy'].includes(action)) {
-                refRBSheetopen.current.open();
+                refRBSheetsend.current.open();
               }
               else if (['Send'].includes(action)) {
-                refRBSheetsend.current.open();
+                refRBSheetopen.current.open();
+              }
+              else if (['Swap'].includes(action)) {
+                navigation.navigate('MainTabs', { screen: 'Swap' });
               }
               else {
                 console.log(`${action} pressed`);
               }
             }}>
-            {/* <Icon
-              name={
-                action === 'Deposit'
-                  ? 'arrow-down-bold-circle-outline'
-                  : action === 'Buy'
-                    ? 'credit-card-outline'
-                    : action === 'Send'
-                      ? 'arrow-up-bold-circle-outline'
-                      : 'swap-horizontal'
-              }
-              size={wp('6.5%')}
-              color="#00C2AA"
-            /> */}
-
             <Image
               source={actionImages[action] || actionImages['Default']}
               style={styles.supportImagee}
@@ -197,7 +217,7 @@ const TransactionScreen = () => {
 
       <RBSheet
         ref={refRBSheet}
-        height={450}
+        height={500}
         openDuration={250}
         customStyles={{
           container: {
@@ -209,19 +229,22 @@ const TransactionScreen = () => {
         }}
       >
         <View style={styles.headerRow}>
-          <Text style={styles.title}>Your zkSync address</Text>
+          <Text style={styles.title}>Your {networks[activeNetwork]?.name} address</Text>
           <TouchableOpacity onPress={() => refRBSheet.current.close()}>
             <Icon name="close" size={20} color="#000" />
           </TouchableOpacity>
         </View>
-        <Text style={styles.subtext}>You can send ETH or any ERC-20 token to this address using zkSync network.</Text>
+        <Text style={styles.subtext}>You can send ETH or any ERC-20 token to this address using {networks[activeNetwork]?.name} network.</Text>
 
-        <View style={styles.qrContainer}>
-          <View style={styles.qrCard}>
+        <View style={styles.cardStyledQR}>
+          <View style={styles.cardHeader}>
+            <Image source={require('../../../assets/home/apple.png')} style={styles.cardAvatar} />
+            <Text style={styles.cardTitle}>My main account</Text>
+          </View>
+
+          <View style={styles.cardBody}>
             <QRCode value={address} size={140} />
-            <View style={styles.addressBox}>
-              <Text style={styles.addressText}>{address}</Text>
-            </View>
+            <Text style={styles.cardAddress}>{address}</Text>
           </View>
         </View>
 
@@ -235,6 +258,7 @@ const TransactionScreen = () => {
           </TouchableOpacity>
         </View>
       </RBSheet>
+
 
       <RBSheet
         ref={refRBSheetopen}
@@ -260,10 +284,9 @@ const TransactionScreen = () => {
         </TouchableOpacity>
       </RBSheet>
 
-
       <RBSheet
         ref={refRBSheetsend}
-        height={500}
+        height={800}
         openDuration={250}
         customStyles={{
           container: {
@@ -345,6 +368,35 @@ const styles = StyleSheet.create({
     height: wp('6%'),
     borderRadius: wp('5%'),
     backgroundColor: '#d2ff4c',
+  },
+  addressBadge: {
+    backgroundColor: '#d0e6ff',
+    borderRadius: wp('2%'),
+    paddingHorizontal: wp('3%'),
+    paddingVertical: hp('0.8%'),
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  badgeText: {
+    color: '#000',
+    fontWeight: '600',
+    fontSize: wp('3.5%'),
+  },
+  networkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: hp('0.5%'),
+  },
+  chainIconSmall: {
+    width: wp('4.5%'),
+    height: wp('4.5%'),
+    resizeMode: 'contain',
+    marginRight: wp('1.5%'),
+  },
+  networkLabel: {
+    fontSize: wp('3.5%'),
+    color: '#000',
+    fontWeight: '500',
   },
   title: {
     fontWeight: 'bold',
@@ -505,6 +557,41 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center'
   },
+  cardStyledQR: {
+    backgroundColor: '#e0f0ff',
+    borderRadius: 16,
+    padding: 20,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+    alignSelf: 'flex-start',
+  },
+  cardAvatar: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    marginRight: 10,
+    backgroundColor: '#d2ff4c',
+  },
+  cardTitle: {
+    fontWeight: 'bold',
+    fontSize: 14,
+    color: '#000',
+  },
+  cardBody: {
+    alignItems: 'center',
+  },
+  cardAddress: {
+    marginTop: 10,
+    textAlign: 'center',
+    fontSize: 12,
+    color: '#333',
+    fontWeight: '500',
+  },  
   title: {
     fontSize: 18,
     fontWeight: 'bold',
@@ -583,20 +670,20 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 15,
-    textAlign: 'center',
+    textAlign: "left",
     color: '#000',
   },
   descriptionbuy: {
     fontSize: 13,
     color: '#555',
-    textAlign: 'center',
+    textAlign: "left",
     marginBottom: 20,
     lineHeight: 18,
   },
   buttonbuy: {
     backgroundColor: '#00C2AA',
-    paddingVertical: 12,
-    paddingHorizontal: 35,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
     borderRadius: 8,
     marginTop: 10,
   },
@@ -672,10 +759,15 @@ const styles = StyleSheet.create({
     fontWeight: 'bold'
   },
   supportImagee: {
-    width: 30,
-    height: 30,
+    width: 26,
+    height: 26,
     resizeMode: 'contain',
-    marginRight: 15,
+  },
+  chainIcon: {
+    width: wp('8%'),
+    height: wp('8%'),
+    resizeMode: 'contain',
+    borderRadius: wp('2%'),
   },
 });
 

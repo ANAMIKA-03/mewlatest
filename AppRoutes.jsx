@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import MainTabs from './screen/MainTabs';
 import NewWalletScreen from './screen/BottomTab/NewWallettab/NewWalletScreen';
 import TransactionScreen from './screen/BottomTab/Transaction/TransactionScreen';
+import InternalBrowser from './screen/BottomTab/BrowserTab/InternalBrowser';
 
 const Stack = createNativeStackNavigator();
 const AppRoutes = () => {
@@ -22,6 +23,18 @@ const AppRoutes = () => {
           headerShown: false,
         }}
       />
+
+      <Stack.Screen
+        name="InternalBrowser"
+        component={InternalBrowser}
+        options={{
+          headerShown: false,
+          animationEnabled: true,
+          title: 'InternalBrowsers',
+          gestureDirection: 'horizontal-inverted',
+        }}
+      />
+
     </Stack.Navigator>
   );
 };

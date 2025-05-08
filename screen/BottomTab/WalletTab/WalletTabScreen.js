@@ -43,7 +43,7 @@ const WalletTabScreen = () => {
   const bottomSheetR = useRef();
   const { wallets, activeWallet } = useSelector((state) => state.wallet);
   const wallet = wallets[activeWallet];
-  // console.log("wallet",wallets)
+  console.log("wallet",wallets)
 
   const isZeroAddress = () => (wallet?.address === '0x0000000000000000000000000000000000000000');
 
@@ -62,11 +62,11 @@ const WalletTabScreen = () => {
 
   const bottomSheetRe = useRef();
   const openBottomSheett = () => {
-    bottomSheetReff.current.open();
+    bottomSheetReff.current?.open();
   };
 
   const closeBottomSheett = () => {
-    bottomSheetReff.current.close();
+    bottomSheetReff.current?.close();
   };
 
   const openBottomSheetchk = () => {
@@ -75,13 +75,11 @@ const WalletTabScreen = () => {
     }
   };
 
-
   const handleInputChange = (index, value) => {
     const updatedPhrase = [...recoveryPhrase];
     updatedPhrase[index] = value.toLowerCase();
     setRecoveryPhrase(updatedPhrase);
   };
-
 
   const steps = [
     "Generating your Ethereum address",
@@ -159,51 +157,68 @@ const WalletTabScreen = () => {
     }
   };
   
-
   const startProgressSteps = () => {
-    progressSheetRef.current.open();
-
-    let stepInterval = setInterval(() => {
-      setCurrentStep(prev => {
-        if (prev === steps.length - 1) {
-          clearInterval(stepInterval);
+    setCurrentStep(0);
+  
+    let stepCount = 0;
+  
+    const interval = setInterval(() => {
+      stepCount += 1;
+  
+      setCurrentStep((prev) => {
+        if (stepCount >= steps.length) {
+          clearInterval(interval);
+          return prev;
         }
-        return prev + 1;
+        return stepCount;
       });
     }, 2000);
-
-    Animated.loop(
+  };
+  
+  useEffect(() => {
+    const animation = Animated.loop(
       Animated.sequence([
         Animated.timing(cursorAnim, { toValue: 1, duration: 500, useNativeDriver: false }),
         Animated.timing(cursorAnim, { toValue: 0, duration: 500, useNativeDriver: false }),
       ])
-    ).start();
-  };
-
+    );
+    animation.start();
+  
+    return () => animation.stop(); // cleanup on unmount
+  }, []);
+  
   const handleConfirmPinPress = async (num) => {
     if (confirmPin.length < 6) {
-      setConfirmPin(confirmPin + num);
-    }
-
-    if (confirmPin.length + 1 === 6) {
-      const finalPin = confirmPin + num;
-      console.log("finalPin:", finalPin);
-      console.log("pin:", pin);
-      if (finalPin === pin) {
-        confirmPinSheetRef.current.close();
-        dispatch(setPincode(finalPin));
-        await createPassword({});
-        setTimeout(() => {
-          startProgressSteps();
-        }, 500);
-      } else {
-        alert('❌ PINs Do Not Match! Try Again.');
-        setConfirmPin('');
+      const updatedPin = confirmPin + num;
+      setConfirmPin(updatedPin);
+  
+      if (updatedPin.length === 6) {
+        console.log("finalPin:", updatedPin);
+        console.log("pin:", pin);
+  
+        if (updatedPin === pin) {
+          confirmPinSheetRef.current?.close();
+          dispatch(setPincode(updatedPin));
+  
+          setTimeout(() => {
+            if (progressSheetRef.current) {
+              progressSheetRef.current.open(); 
+              setTimeout(() => {
+                startProgressSteps(); 
+                createPassword({});  // only after UI shows
+              }, 500);
+            } else {
+              console.warn("progressSheetRef is not ready");
+            }
+          }, 300);
+        } else {
+          alert('❌ PINs Do Not Match! Try Again.');
+          setConfirmPin('');
+        }
       }
     }
   };
-
-
+  
   const renderStep = (text, index) => {
     const isActive = index === currentStep;
     const isDone = index < currentStep;
@@ -237,7 +252,6 @@ const WalletTabScreen = () => {
     }
   };
 
-
   const handlePinPress = (num) => {
     if (pin.length < 6) {
       setPin(pin + num);
@@ -245,8 +259,8 @@ const WalletTabScreen = () => {
     if (pin.length + 1 === 6) {
       dispatch(setPincode(pin + num))
       setTimeout(() => {
-        pinSheetRef.current.close();
-        confirmPinSheetRef.current.open();
+        pinSheetRef.current?.close();
+        confirmPinSheetRef.current?.open();
       }, 300);
     }
   };
@@ -283,14 +297,14 @@ const WalletTabScreen = () => {
   );
 
   const openBottomSheet = () => {
-    bottomSheetRef.current.open();
+    bottomSheetRef.current?.open();
     navigation.getParent()?.setOptions({
       tabBarStyle: { display: 'none' }
     });
   };
 
   const closeBottomSheet = () => {
-    bottomSheetRef.current.close();
+    bottomSheetRef.current?.close();
     navigation.getParent()?.setOptions({
       tabBarStyle: { display: 'flex' }
     });
@@ -302,7 +316,7 @@ const WalletTabScreen = () => {
       tabBarStyle: { display: 'none' }
     });
     setTimeout(() => {
-      pinSheetRef.current.open();
+      pinSheetRef.current?.open();
     }, 300);
   };
 
@@ -361,7 +375,7 @@ const WalletTabScreen = () => {
 
         </View>
         <TouchableOpacity style={styles.iconCircle}
-          onPress={() => scannerRef.current.open()}
+          onPress={() => scannerRef.current?.open()}
         >
           <MaterialCommunityIcons name="qrcode-scan" size={22} color="#000" />
         </TouchableOpacity>
@@ -488,8 +502,8 @@ const WalletTabScreen = () => {
           <TouchableOpacity
             style={styles.safetyCTA}
             onPress={() => {
-              bottomSheetRef.current.close();
-              setTimeout(() => pinSheetRef.current.open(), 300);
+              bottomSheetRef.current?.close();
+              setTimeout(() => pinSheetRef.current?.open(), 300);
             }}
           >
             <Text style={styles.safetyCTAText}>CREATE A WALLET</Text>
@@ -512,7 +526,7 @@ const WalletTabScreen = () => {
         }}
       >
         <TouchableOpacity
-          onPress={() => pinSheetRef.current.close()}
+          onPress={() => pinSheetRef.current?.close()}
           style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 25 }}
         >
           <MaterialCommunityIcons name="arrow-left" size={24} color="#000" />
@@ -548,7 +562,7 @@ const WalletTabScreen = () => {
         }}
       >
         <TouchableOpacity
-          onPress={() => confirmPinSheetRef.current.close()}
+          onPress={() => confirmPinSheetRef.current?.close()}
           style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 25 }}
         >
           <MaterialCommunityIcons name="arrow-left" size={24} color="#000" />
@@ -584,7 +598,7 @@ const WalletTabScreen = () => {
           },
         }}
       >
-        <TouchableOpacity style={styles.crossButton} onPress={() => scannerSheetRef.current.close()}>
+        <TouchableOpacity style={styles.crossButton} onPress={() => scannerSheetRef.current?.close()}>
           <Text style={styles.crossText}>×</Text>
         </TouchableOpacity>
         <Text style={styles.modalTitle}>

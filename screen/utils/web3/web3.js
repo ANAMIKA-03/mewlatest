@@ -11,6 +11,8 @@ import 'react-native-crypto';
 import { Wallet } from 'ethers';
 import { HDNode } from '@ethersproject/hdnode';
 import { wordlists } from '@ethersproject/wordlists';
+import { WalletAssets } from '../walletConstants'; 
+
 const web3 = new Web3(networks[0]?.rpcUrl);
 
 export const getWeb3Instance = () => {
@@ -38,7 +40,6 @@ export const getHDWallet = (index, mnemonic) => {
     if (index == 0) {
       wallet = Wallet.createRandom();
     } else {
-      
       const derivationPath = `m/44'/60'/0'/0/${index}`;
       wallet = Wallet.fromMnemonic(mnemonic, derivationPath);
     }
@@ -76,6 +77,39 @@ export const importWallet = (mnemonic) => {
   }
 };
 
+export const getAllChainBalances = async (walletAddress) => {
+  const results = [];
+
+  for (const network of WalletAssets) {
+    try {
+      const provider = new ethers.providers.JsonRpcProvider(network.rpcUrl);
+      const balanceWei = await provider.getBalance(walletAddress);
+      const balance = parseFloat(ethers.utils.formatUnits(balanceWei, network.decimals));
+
+      results.push({
+        chainId: network.chainId,
+        slug: network.slug,
+        name: network.name,
+        symbol: network.symbol,
+        balance,
+        rpcUrl: network.rpcUrl,
+        blockExplorerUrl: network.blockExplorerUrl,
+      });
+    } catch (error) {
+      console.error(`Error fetching balance for ${network.slug}:`, error.message);
+      results.push({
+        chainId: network.chainId,
+        slug: network.slug,
+        name: network.name,
+        symbol: network.symbol,
+        balance: null,
+        error: error.message,
+      });
+    }
+  }
+
+  return results;
+};
 
 export const setDefaultAccount = (privateKey) => {
   // console.log(privateKey, ' privatekey');
