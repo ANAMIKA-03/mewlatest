@@ -184,7 +184,7 @@ const WalletTabScreen = () => {
     );
     animation.start();
   
-    return () => animation.stop(); // cleanup on unmount
+    return () => animation.stop(); 
   }, []);
   
   const handleConfirmPinPress = async (num) => {
@@ -199,18 +199,7 @@ const WalletTabScreen = () => {
         if (updatedPin === pin) {
           confirmPinSheetRef.current?.close();
           dispatch(setPincode(updatedPin));
-  
-          setTimeout(() => {
-            if (progressSheetRef.current) {
-              progressSheetRef.current.open(); 
-              setTimeout(() => {
-                startProgressSteps(); 
-                createPassword({});  // only after UI shows
-              }, 500);
-            } else {
-              console.warn("progressSheetRef is not ready");
-            }
-          }, 300);
+          createPassword({}); 
         } else {
           alert('❌ PINs Do Not Match! Try Again.');
           setConfirmPin('');
@@ -310,34 +299,15 @@ const WalletTabScreen = () => {
     });
   };
 
-  const openPinModal = () => {
-    bottomSheetRef.current.close();
-    navigation.getParent()?.setOptions({
-      tabBarStyle: { display: 'none' }
-    });
-    setTimeout(() => {
-      pinSheetRef.current?.open();
-    }, 300);
-  };
-
-  const closePinModal = () => {
-    pinSheetRef.current.close();
-    navigation.getParent()?.setOptions({
-      tabBarStyle: { display: 'flex' }
-    });
-  };
-
-
   const toggleDropdown = () => {
     setDropdownVisible(!dropdownVisible);
   };
 
   const selectNetwork = (networkindex) => {
     dispatch(setActiveNetwork(networkindex));
-    setProvider(networks[networkindex]?.rpcUrl); // changing rpc in app
+    setProvider(networks[networkindex]?.rpcUrl); 
     setDropdownVisible(false);
   };
-  // console.log(wallet?.address, isZeroAddress(), ' adsfgsdfgasdfg')
   if (!isZeroAddress()) {
     console.log('new wallet')
     return <NewWalletScreen />
